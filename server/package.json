@@ -1,0 +1,29 @@
+{
+  "name": "sharejs-rdf-server",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "express": "4.x",
+    "share": "<0.7"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.2",
+    "grunt-contrib-jshint": "~0.6.3",
+    "grunt-contrib-nodeunit": "~0.2.0",
+    "grunt-contrib-uglify": "~0.2.2",
+    "grunt-contrib-watch": "~0.6.1"
+  },
+  "scripts": {
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:AKSW/sharejs-rdf.git"
+  },
+  "author": "Andy Wermke",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AKSW/sharejs-rdf/issues"
+  },
+  "homepage": "https://github.com/AKSW/sharejs-rdf"
+}
