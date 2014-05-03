@@ -2,28 +2,45 @@
   "name": "sharejs-rdf-server",
   "version": "0.0.0",
   "description": "",
-  "main": "index.js",
-  "dependencies": {
-    "express": "4.x",
-    "share": "<0.7"
+  "keywords": [
+    "node",
+    "js"
+  ],
+  "bugs": "https://github.com/AKSW/sharejs-rdf/issues",
+  "author": {
+    "name": "AKSW Research Group @ University of Leipzig",
+    "email": "andy@dev.next-step-software.com",
+    "url": "https://github.com/AKSW"
   },
-  "devDependencies": {
-    "grunt": "~0.4.2",
-    "grunt-contrib-jshint": "~0.6.3",
-    "grunt-contrib-nodeunit": "~0.2.0",
-    "grunt-contrib-uglify": "~0.2.2",
-    "grunt-contrib-watch": "~0.6.1"
-  },
-  "scripts": {
-  },
+  "homepage": "https://github.com/AKSW/sharejs-rdf",
   "repository": {
     "type": "git",
-    "url": "git@github.com:AKSW/sharejs-rdf.git"
+    "url": "git://github.com/AKSW/sharejs-rdf.git"
   },
-  "author": "Andy Wermke",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/AKSW/sharejs-rdf/issues"
+  "main": "server/index.js",
+  "dependencies": {
+    "share": "<0.7",
+    "connect": "<2.0.0"
   },
-  "homepage": "https://github.com/AKSW/sharejs-rdf"
+  "devDependencies": {
+    "grunt": "~0.4.1",
+    "grunt-node-inspector": "~0.1.1",
+    "grunt-nodemon": "~0.1.1",
+    "grunt-concurrent": "~0.4.1",
+    "grunt-contrib-watch": "~0.5.3",
+    "grunt-open": "~0.2.2",
+    "grunt-wait": "~0.1.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "engines": {
+    "node": ">=0.8.0",
+    "npm": ">=1.2.10"
+  },
+  "licenses": [
+    {
+      "type": "MIT"
+    }
+  ]
 }
