@@ -1,1 +1,5 @@
-console.log('\'Allo \'Allo!');
+angular.module('sampleApp', [])
+
+.controller('AppCtrl', function($scope) {
+
+});
