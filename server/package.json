@@ -20,7 +20,8 @@
   "main": "server/index.js",
   "dependencies": {
     "share": "<0.7",
-    "connect": "<2.0.0"
+    "connect": "<2.0.0",
+    "redis": "~0.10.3"
   },
   "devDependencies": {
     "grunt": "~0.4.1",
@@ -28,8 +29,10 @@
     "grunt-nodemon": "~0.1.1",
     "grunt-concurrent": "~0.4.1",
     "grunt-contrib-watch": "~0.5.3",
+    "grunt-env": "~0.4.1",
     "grunt-open": "~0.2.2",
-    "grunt-wait": "~0.1.0"
+    "grunt-wait": "~0.1.0",
+    "load-grunt-tasks": "^0.4.0"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
