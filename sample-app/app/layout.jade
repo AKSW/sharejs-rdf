@@ -1,7 +1,7 @@
 include mixins
 
 doctype html
-html.no-js(ng-app='sampleApp')
+html.no-js(ng-app='app')
 head
     meta(charset='utf-8')
     title sample app
@@ -26,7 +26,7 @@ head
        endbuild
     block head
 
-  body
+  body(ng-controller='AppController')
     //if lt IE 10
       p.browsehappy
         | You are using an
@@ -34,6 +34,8 @@ head
         | browser. Please
         a(href='http://browsehappy.com/') upgrade your browser
         | to improve your experience.
+    #alerts
+      alert(ng-repeat='alert in alerts', type='{{alert.type}}', close='closeAlert($index)') {{alert.message}}
     .container
       .header
         ul.nav.nav-pills.pull-right
@@ -41,12 +43,13 @@ head
             +nav_links('')
         h3.text-muted sharejs-rdf
 
-      block content
+      .body
+        block content
 
       .footer
         p
           span.glyphicon.glyphicon-share-alt
-          | 
+          | &nbsp;
           a(href="https://github.com/AKSW/sharejs-rdf") sharejs-rdf sample app
     //
        build:js(app) scripts/vendor.js
@@ -55,9 +58,12 @@ head
     script(src='../bower_components/jquery/dist/jquery.js')
     script(src='../bower_components/codemirror/lib/codemirror.js')
     script(src='../bower_components/angular/angular.js')
+    script(src='../bower_components/angular-bootstrap/ui-bootstrap-tpls.js')
     script(src='../bower_components/angular-ui-codemirror/ui-codemirror.js')
     //
        endbower
+    script(src='scripts/vendor/browserchannel/bcsocket.js')
+    script(src='scripts/vendor/share/share.js')
     //
        endbuild
     //
@@ -88,5 +94,8 @@ head
     //
        build:js({app,.tmp}) scripts/main.js
     script(src='scripts/main.js')
+    script(src='scripts/controllers/AppController.js')
+    script(src='scripts/controllers/TurtleEditorController.js')
+    script(src='scripts/services/AlertService.js')
     //
        endbuild

@@ -1,5 +1,1 @@
-angular.module('sampleApp', [])
-
-.controller('AppCtrl', function($scope) {
-
-});
+angular.module('app', ['ui.bootstrap', 'ui.codemirror']);
