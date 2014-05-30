@@ -4,7 +4,7 @@ angular.module('app').controller('TurtleEditorController', ['$scope', 'AlertServ
 
   // Properties:
 
-  $scope.serverUrl = 'http://localhost:4000/channel';
+  $scope.serverUrl = 'http://localhost:4000/channel#test';
   $scope.turtleContents = '';
 
   $scope.editorOptions = {
@@ -21,6 +21,10 @@ angular.module('app').controller('TurtleEditorController', ['$scope', 'AlertServ
   $scope.connect = function() {
     var serverUrl = $scope.serverUrl.split('#')[0];
     var docName = $scope.serverUrl.split('#')[1];
+
+    if (!docName) {
+      return AlertService.danger('No document name given. Append to server URL as "#<doc name>".');
+    }
 
     var options = {
       // authentication: '1234567',
