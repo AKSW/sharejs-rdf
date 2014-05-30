@@ -7,7 +7,7 @@ block content
   .page-header
     h1 sharejs-rdf - Turtle Editor
 
-  div(ng-controller="TurtleEditorController")
+  div(ng-controller='TurtleEditorController')
     .row.connect
       .col-lg-12
         include jade-blocks/sharejs-config
@@ -15,4 +15,4 @@ block content
     .row.editor
       .col-lg-12
         p
-          textarea(ui-codemirror, ng-model="turtleContents")
+          textarea(ui-codemirror='{ onLoad: codemirrorLoaded }', ng-model='turtleContents')
