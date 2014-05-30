@@ -12,6 +12,9 @@ var server = connect(
 
 // Attach the sharejs REST and Socket.io interfaces to the server
 sharejs.attach(server, {
+  browserChannel: {
+    cors: '*'
+  },
   db: {
     type: process.env.SHAREJS_DB
   }
