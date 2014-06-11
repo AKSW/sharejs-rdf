@@ -4,6 +4,9 @@ WEB = typeof window == 'object' && window.document
 rdfJson =
   name: 'rdf-json'
 
+  create: () -> {}
+
+
 if(WEB)
   sharejs = window.sharejs
   sharejs.types ||= {}

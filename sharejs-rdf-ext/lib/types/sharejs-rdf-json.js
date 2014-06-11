@@ -4,7 +4,10 @@
   WEB = typeof window === 'object' && window.document;
 
   rdfJson = {
-    name: 'rdf-json'
+    name: 'rdf-json',
+    create: function() {
+      return {};
+    }
   };
 
   if (WEB) {
