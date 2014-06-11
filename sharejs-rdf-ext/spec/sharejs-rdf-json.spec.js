@@ -1,30 +1,26 @@
 (function() {
-  var jsonld;
+  var jsonld, rdfJson;
 
   require('jasmine-expect');
 
   jsonld = require('jsonld');
 
+  rdfJson = require('../lib/types/sharejs-rdf-json');
+
   describe('sharejs-rdf-json', function() {
-    var rdfJson;
-    rdfJson = null;
-    beforeEach(function() {
-      return rdfJson = require('../lib/types/sharejs-rdf-json');
-    });
     describe('type object', function() {
       return it('is named rdf-json', function() {
         return expect(rdfJson.name).toEqual('rdf-json');
       });
     });
     return describe('create method', function() {
+      var doc;
+      doc = rdfJson.create();
       it('returns object', function() {
-        var doc;
-        doc = rdfJson.create();
         return expect(doc).toBeObject();
       });
-      return it('returns empty set of tripels', function() {
-        var doc, done;
-        doc = rdfJson.create();
+      return it('returns empty, but parsable set of tripels', function() {
+        var done;
         done = false;
         runs(function() {
           return jsonld.flatten(doc, function(err, flattened) {
