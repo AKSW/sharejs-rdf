@@ -3,7 +3,7 @@
 module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-contrib-coffee');
   grunt.loadNpmTasks('grunt-contrib-watch');
-  grunt.loadNpmTasks('grunt-shell');
+  grunt.loadNpmTasks('grunt-jasmine-node');
 
   grunt.initConfig({
     watch: {
@@ -20,11 +20,11 @@ module.exports = function (grunt) {
         tasks: ['test']
       }
     },
-    shell: {
-      test: {
-        options: { stdout: true },
-        command: 'jasmine-node spec/'
-      }
+    jasmine_node: {
+      options: {
+        includeStackTrace: false
+      },
+      all: ['spec/']
     },
     coffee: {
       lib: {
@@ -44,5 +44,5 @@ module.exports = function (grunt) {
     }
   });
 
-  grunt.registerTask('test', ['coffee', 'shell:test']);
+  grunt.registerTask('test', ['coffee', 'jasmine_node']);
 };
