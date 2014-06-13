@@ -76,11 +76,17 @@
       for (subjectUri in triples) {
         predicates = triples[subjectUri];
         this.assertSubjectIsUri(subjectUri);
+        if (!this._triples[subjectUri]) {
+          continue;
+        }
         predicateCount = 0;
         for (predicateUri in predicates) {
           objects = predicates[predicateUri];
           this.assertPredicateIsUri(predicateUri, subjectUri);
           this.assertObjectsArray(objects, subjectUri, predicateUri);
+          if (!this._triples[subjectUri][predicateUri]) {
+            continue;
+          }
           predicateCount++;
           for (_i = 0, _len = objects.length; _i < _len; _i++) {
             objectToRemove = objects[_i];
@@ -168,18 +174,23 @@
       return new RdfJsonDoc;
     },
     apply: function(snapshot, op) {
-      return null;
+      var newSnapshot;
+      if (!(snapshot instanceof RdfJsonDoc)) {
+        throw new Error("Snapshot must be a RdfJsonDoc instance. Given: " + snapshot);
+      }
+      if (!(op instanceof RdfJsonOperation)) {
+        throw new Error("Operation must be a RdfJsonOperation instance. Given: " + op);
+      }
+      newSnapshot = snapshot.clone();
+      switch (op.operation()) {
+        case RdfJsonOperation.prototype.OP_INSERT:
+          newSnapshot.insert(op.triples());
+          break;
+        case RdfJsonOperation.prototype.OP_REMOVE:
+          newSnapshot.remove(op.triples());
+      }
+      return newSnapshot;
     },
-
-    /*
-      switch op.operation()
-        when RdfJsonOperation::OP_INSERT
-          newSnapshot = null  # TODO
-        when RdfJsonOperation::OP_REMOVE
-          newSnapshot = null  # TODO
-    
-      newSnapshot
-     */
     transform: function(op1, op2, side) {
       return null;
     }

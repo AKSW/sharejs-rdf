@@ -67,17 +67,33 @@
       });
       return expect(doc.triples()).toEqual(testTriples);
     });
+    it('can delete', function() {
+      var doc;
+      doc = new RdfJsonDoc(testTriples);
+      doc.remove(testTriples);
+      return expect(doc.triples()).toEqual({});
+    });
     it('removal of empty triple set causes no change', function() {
       var doc;
       doc = new RdfJsonDoc(testTriples);
       doc.remove({});
       return expect(doc.triples()).toEqual(testTriples);
     });
-    it('can delete', function() {
+    it('removal of non-existing triple set causes no change', function() {
       var doc;
       doc = new RdfJsonDoc(testTriples);
-      doc.remove(testTriples);
-      return expect(doc.triples()).toEqual({});
+      doc.remove({
+        'http://example.com/persons/andy': {
+          'http://example.com/ontology#age': [
+            {
+              type: 'literal',
+              value: '20',
+              datatype: 'http://www.w3.org/2001/XMLSchema#integer'
+            }
+          ]
+        }
+      });
+      return expect(doc.triples()).toEqual(testTriples);
     });
     it('throws error on invalid subject', function() {
       var doc;

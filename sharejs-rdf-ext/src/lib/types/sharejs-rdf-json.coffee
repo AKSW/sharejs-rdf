@@ -41,12 +41,15 @@ class RdfJsonDoc
   remove: (triples) ->
     for subjectUri, predicates of triples
       @assertSubjectIsUri(subjectUri)
+      continue if !@_triples[subjectUri]
+
       predicateCount = 0
       for predicateUri, objects of predicates
         @assertPredicateIsUri(predicateUri, subjectUri)
         @assertObjectsArray(objects, subjectUri, predicateUri)
-        predicateCount++
+        continue if !@_triples[subjectUri][predicateUri]
 
+        predicateCount++
         for objectToRemove in objects
           presentObjects = @_triples[subjectUri][predicateUri]
           for presentObject, presentObjectIndex in presentObjects
@@ -95,16 +98,18 @@ rdfJson =
 
   create: () -> new RdfJsonDoc
 
-  apply: (snapshot, op) -> null          # TODO
-  ###
+  apply: (snapshot, op) ->
+    throw new Error("Snapshot must be a RdfJsonDoc instance. Given: #{snapshot}") unless snapshot instanceof RdfJsonDoc
+    throw new Error("Operation must be a RdfJsonOperation instance. Given: #{op}") unless op instanceof RdfJsonOperation
+    newSnapshot = snapshot.clone()
+
     switch op.operation()
       when RdfJsonOperation::OP_INSERT
-        newSnapshot = null  # TODO
+        newSnapshot.insert op.triples()
       when RdfJsonOperation::OP_REMOVE
-        newSnapshot = null  # TODO
+        newSnapshot.remove op.triples()
 
-    newSnapshot
-  ###
+    return newSnapshot
 
   transform: (op1, op2, side) -> null    # TODO
 

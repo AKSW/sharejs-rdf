@@ -42,15 +42,24 @@ describe 'RdfJsonDoc', () ->
     )
     expect(doc.triples()).toEqual testTriples
 
+  it 'can delete', () ->
+    doc = new RdfJsonDoc(testTriples)
+    doc.remove testTriples
+    expect(doc.triples()).toEqual {}
+
   it 'removal of empty triple set causes no change', () ->
     doc = new RdfJsonDoc(testTriples)
     doc.remove {}
     expect(doc.triples()).toEqual testTriples
 
-  it 'can delete', () ->
+  it 'removal of non-existing triple set causes no change', () ->
     doc = new RdfJsonDoc(testTriples)
-    doc.remove testTriples
-    expect(doc.triples()).toEqual {}
+    doc.remove(
+      'http://example.com/persons/andy':
+        'http://example.com/ontology#age':
+          [ { type: 'literal', value: '20', datatype: 'http://www.w3.org/2001/XMLSchema#integer' } ]
+    )
+    expect(doc.triples()).toEqual testTriples
 
   it 'throws error on invalid subject', () ->
     doc = new RdfJsonDoc()

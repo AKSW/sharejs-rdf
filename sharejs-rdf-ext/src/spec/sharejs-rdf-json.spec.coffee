@@ -31,3 +31,56 @@ describe 'sharejs-rdf-json', () ->
 
       waitsFor () ->
         done
+
+
+  describe 'apply method', () ->
+    testTriples =
+      'http://example.com/persons/john':
+        'http://example.com/ontology#name':
+          [ { type: 'literal', value: 'John Smith' } ]
+      'http://example.com/persons/andy':
+        'http://example.com/ontology#name':
+          [ { type: 'literal', value: 'Andy Smith' } ]
+
+    testInsertionTriples =
+      'http://example.com/persons/john':
+        'http://example.com/ontology#name':
+          [ { type: 'literal', value: 'John R. Smith' }, { type: 'literal', value: 'John Richard Smith' } ]
+
+    testDeletionTriples =
+      'http://example.com/persons/john':
+        'http://example.com/ontology#name':
+          [ { type: 'literal', value: 'John Smith' } ]
+
+    afterInsertionShouldBe =
+      'http://example.com/persons/john':
+        'http://example.com/ontology#name':
+          [
+            { type: 'literal', value: 'John Smith' }
+            { type: 'literal', value: 'John R. Smith' }
+            { type: 'literal', value: 'John Richard Smith' }
+          ]
+      'http://example.com/persons/andy':
+        'http://example.com/ontology#name':
+          [ { type: 'literal', value: 'Andy Smith' } ]
+
+    afterDeletionShouldBe =
+      'http://example.com/persons/andy':
+        'http://example.com/ontology#name':
+          [ { type: 'literal', value: 'Andy Smith' } ]
+
+
+    it 'does insertion', () ->
+      snapshot = new RdfJsonDoc(testTriples)
+      op = RdfJsonOperation.insert testInsertionTriples
+
+      newSnapshot = rdfJson.apply(snapshot, op)
+      expect(newSnapshot.triples()).toEqual afterInsertionShouldBe
+
+    it 'does deletion', () ->
+      snapshot = new RdfJsonDoc(testTriples)
+      op = RdfJsonOperation.remove testDeletionTriples
+
+      newSnapshot = rdfJson.apply(snapshot, op)
+      expect(newSnapshot.triples()).toEqual afterDeletionShouldBe
+    
