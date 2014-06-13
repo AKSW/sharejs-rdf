@@ -7,9 +7,8 @@
 
   RdfJsonDoc = rdfJson.Doc;
 
-  describe('RdfJsonDoc (empty)', function() {
-    var doc, testTriples;
-    doc = new RdfJsonDoc();
+  describe('RdfJsonDoc', function() {
+    var testTriples;
     testTriples = {
       'http://example.com/persons/john': {
         'http://example.com/ontology#name': [
@@ -17,25 +16,72 @@
             type: 'literal',
             value: 'John Smith'
           }
+        ],
+        'http://example.com/ontology#age': [
+          {
+            type: 'literal',
+            value: '30',
+            datatype: 'http://www.w3.org/2001/XMLSchema#integer'
+          }
+        ]
+      },
+      'http://example.com/persons/andy': {
+        'http://example.com/ontology#name': [
+          {
+            type: 'literal',
+            value: 'Andy Smith'
+          }
         ]
       }
     };
     it('has empty triples object', function() {
+      var doc;
+      doc = new RdfJsonDoc();
       return expect(doc.triples()).toEqual({});
     });
     it('can insert', function() {
+      var doc;
+      doc = new RdfJsonDoc();
       doc.insert(testTriples);
       return expect(doc.triples()).toEqual(testTriples);
     });
+    it('can clone', function() {
+      var clone, doc;
+      doc = new RdfJsonDoc(testTriples);
+      clone = doc.clone();
+      return expect(clone.triples()).toEqual(testTriples);
+    });
+    it('clone is independent of original document', function() {
+      var clone, doc;
+      doc = new RdfJsonDoc(testTriples);
+      clone = doc.clone();
+      clone.insert({
+        'http://example.com/persons/john': {
+          'http://example.com/ontology#name': [
+            {
+              type: 'literal',
+              value: 'John R. Smith'
+            }
+          ]
+        }
+      });
+      return expect(doc.triples()).toEqual(testTriples);
+    });
     it('removal of empty triple set causes no change', function() {
+      var doc;
+      doc = new RdfJsonDoc(testTriples);
       doc.remove({});
       return expect(doc.triples()).toEqual(testTriples);
     });
     it('can delete', function() {
+      var doc;
+      doc = new RdfJsonDoc(testTriples);
       doc.remove(testTriples);
       return expect(doc.triples()).toEqual({});
     });
     it('throws error on invalid subject', function() {
+      var doc;
+      doc = new RdfJsonDoc();
       return expect(function() {
         return doc.insert({
           12: {
@@ -50,6 +96,8 @@
       }).toThrow(new Error("Subject must be an URI: 12"));
     });
     it('throws error on invalid predicate', function() {
+      var doc;
+      doc = new RdfJsonDoc();
       return expect(function() {
         return doc.insert({
           'http://example.com/persons/john': {
@@ -64,6 +112,8 @@
       }).toThrow(new Error("Predicate must be an URI: http:/x.y/#name (of subject http://example.com/persons/john)"));
     });
     return it('throws error on invalid objects', function() {
+      var doc;
+      doc = new RdfJsonDoc();
       return expect(function() {
         return doc.insert({
           'http://example.com/persons/john': {
@@ -77,7 +127,7 @@
     });
   });
 
-  describe('RDFJsonDoc (non-empty)', function() {
+  describe('RDFJsonDoc (more complex insertion/deletion)', function() {
     var afterDeletion1ShouldBe, afterDeletion2ShouldBe, afterTriples2ShouldBe, afterTriples3ShouldBe, afterTriples4ShouldBe, deletion1, deletion2, doc, testTriples1, testTriples2, testTriples3, testTriples4;
     testTriples1 = {
       'http://example.com/persons/john': {

@@ -16,6 +16,33 @@
       return this._triples;
     };
 
+    RdfJsonDoc.prototype.clone = function() {
+      var cloneTriples;
+      cloneTriples = function(triples) {
+        var objKey, objValue, object, objectClone, objects, predUri, predicates, subjUri, triplesClone, _i, _len;
+        triplesClone = {};
+        for (subjUri in triples) {
+          predicates = triples[subjUri];
+          triplesClone[subjUri] = {};
+          for (predUri in predicates) {
+            objects = predicates[predUri];
+            triplesClone[subjUri][predUri] = [];
+            for (_i = 0, _len = objects.length; _i < _len; _i++) {
+              object = objects[_i];
+              objectClone = {};
+              for (objKey in object) {
+                objValue = object[objKey];
+                objectClone[objKey] = objValue;
+              }
+              triplesClone[subjUri][predUri].push(objectClone);
+            }
+          }
+        }
+        return triplesClone;
+      };
+      return new RdfJsonDoc(cloneTriples(this.triples()));
+    };
+
     RdfJsonDoc.prototype.insert = function(triples) {
       var objects, predicateUri, predicates, subjectUri, _results;
       _results = [];

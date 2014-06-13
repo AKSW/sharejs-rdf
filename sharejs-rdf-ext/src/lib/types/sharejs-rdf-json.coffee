@@ -10,6 +10,24 @@ class RdfJsonDoc
 
   triples: () -> @_triples
 
+  clone: () ->
+    cloneTriples = (triples) ->
+      triplesClone = {}
+
+      for subjUri, predicates of triples
+        triplesClone[subjUri] = {}
+        for predUri, objects of predicates
+          triplesClone[subjUri][predUri] = []
+          for object in objects
+            objectClone = {}
+            for objKey, objValue of object
+              objectClone[objKey] = objValue
+            triplesClone[subjUri][predUri].push objectClone
+
+      return triplesClone
+
+    return new RdfJsonDoc( cloneTriples(@triples()) )
+
   insert: (triples) ->
     for subjectUri, predicates of triples
       @assertSubjectIsUri(subjectUri)
