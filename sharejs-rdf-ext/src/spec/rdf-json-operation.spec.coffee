@@ -23,6 +23,13 @@ describe 'RdfJsonOperation', () ->
     expect(op.operation()).toEqual RdfJsonOperation::OP_INSERT
     expect(op.triples()).toEqual testTriples
 
+  it 'can clone', () ->
+    op = new RdfJsonOperation(RdfJsonOperation::OP_INSERT, testTriples)
+    clone = op.clone()
+
+    expect(clone.operation()).toEqual(op.operation())
+    expect(clone.triples()).toEqual(op.triples())
+
 
   describe 'has working factory methods:', () ->
 

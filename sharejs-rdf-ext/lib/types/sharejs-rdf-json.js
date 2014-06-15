@@ -1,7 +1,30 @@
 (function() {
-  var RdfJsonDoc, RdfJsonOperation, WEB, jsonld, rdfJson, sharejs;
+  var RdfJsonDoc, RdfJsonOperation, WEB, cloneTriples, jsonld, rdfJson, sharejs;
 
   WEB = typeof window === 'object' && window.document;
+
+  cloneTriples = function(triples) {
+    var objKey, objValue, object, objectClone, objects, predUri, predicates, subjUri, triplesClone, _i, _len;
+    triplesClone = {};
+    for (subjUri in triples) {
+      predicates = triples[subjUri];
+      triplesClone[subjUri] = {};
+      for (predUri in predicates) {
+        objects = predicates[predUri];
+        triplesClone[subjUri][predUri] = [];
+        for (_i = 0, _len = objects.length; _i < _len; _i++) {
+          object = objects[_i];
+          objectClone = {};
+          for (objKey in object) {
+            objValue = object[objKey];
+            objectClone[objKey] = objValue;
+          }
+          triplesClone[subjUri][predUri].push(objectClone);
+        }
+      }
+    }
+    return triplesClone;
+  };
 
   RdfJsonDoc = (function() {
     function RdfJsonDoc(triples) {
@@ -17,29 +40,6 @@
     };
 
     RdfJsonDoc.prototype.clone = function() {
-      var cloneTriples;
-      cloneTriples = function(triples) {
-        var objKey, objValue, object, objectClone, objects, predUri, predicates, subjUri, triplesClone, _i, _len;
-        triplesClone = {};
-        for (subjUri in triples) {
-          predicates = triples[subjUri];
-          triplesClone[subjUri] = {};
-          for (predUri in predicates) {
-            objects = predicates[predUri];
-            triplesClone[subjUri][predUri] = [];
-            for (_i = 0, _len = objects.length; _i < _len; _i++) {
-              object = objects[_i];
-              objectClone = {};
-              for (objKey in object) {
-                objValue = object[objKey];
-                objectClone[objKey] = objValue;
-              }
-              triplesClone[subjUri][predUri].push(objectClone);
-            }
-          }
-        }
-        return triplesClone;
-      };
       return new RdfJsonDoc(cloneTriples(this.triples()));
     };
 
@@ -144,13 +144,11 @@
     RdfJsonOperation.prototype.OP_REMOVE = 'remove';
 
     RdfJsonOperation.insert = function(triplesToAdd) {
-      var op;
-      return op = new RdfJsonOperation(RdfJsonOperation.prototype.OP_INSERT, triplesToAdd);
+      return new RdfJsonOperation(RdfJsonOperation.prototype.OP_INSERT, triplesToAdd);
     };
 
     RdfJsonOperation.remove = function(triplesToRemove) {
-      var op;
-      return op = new RdfJsonOperation(RdfJsonOperation.prototype.OP_REMOVE, triplesToRemove);
+      return new RdfJsonOperation(RdfJsonOperation.prototype.OP_REMOVE, triplesToRemove);
     };
 
     function RdfJsonOperation(operation, triples) {
@@ -161,6 +159,10 @@
         return triples;
       };
     }
+
+    RdfJsonOperation.prototype.clone = function() {
+      return new RdfJsonOperation(this.operation(), cloneTriples(this.triples()));
+    };
 
     return RdfJsonOperation;
 
@@ -192,7 +194,7 @@
       return newSnapshot;
     },
     transform: function(op1, op2, side) {
-      return null;
+      return op1.clone();
     }
   };
 

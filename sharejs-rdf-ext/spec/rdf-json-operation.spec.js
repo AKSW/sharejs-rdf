@@ -29,6 +29,13 @@
       expect(op.operation()).toEqual(RdfJsonOperation.prototype.OP_INSERT);
       return expect(op.triples()).toEqual(testTriples);
     });
+    it('can clone', function() {
+      var clone, op;
+      op = new RdfJsonOperation(RdfJsonOperation.prototype.OP_INSERT, testTriples);
+      clone = op.clone();
+      expect(clone.operation()).toEqual(op.operation());
+      return expect(clone.triples()).toEqual(op.triples());
+    });
     return describe('has working factory methods:', function() {
       it('insert', function() {
         var op;

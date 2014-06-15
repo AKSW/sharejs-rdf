@@ -2,6 +2,22 @@
 WEB = typeof window == 'object' && window.document
 
 
+cloneTriples = (triples) ->
+  triplesClone = {}
+
+  for subjUri, predicates of triples
+    triplesClone[subjUri] = {}
+    for predUri, objects of predicates
+      triplesClone[subjUri][predUri] = []
+      for object in objects
+        objectClone = {}
+        for objKey, objValue of object
+          objectClone[objKey] = objValue
+        triplesClone[subjUri][predUri].push objectClone
+
+  return triplesClone
+
+
 # triples object format: RDF/JSON - https://dvcs.w3.org/hg/rdf/raw-file/default/rdf-json/index.html
 class RdfJsonDoc
   constructor: (triples={}) ->
@@ -11,21 +27,6 @@ class RdfJsonDoc
   triples: () -> @_triples
 
   clone: () ->
-    cloneTriples = (triples) ->
-      triplesClone = {}
-
-      for subjUri, predicates of triples
-        triplesClone[subjUri] = {}
-        for predUri, objects of predicates
-          triplesClone[subjUri][predUri] = []
-          for object in objects
-            objectClone = {}
-            for objKey, objValue of object
-              objectClone[objKey] = objValue
-            triplesClone[subjUri][predUri].push objectClone
-
-      return triplesClone
-
     return new RdfJsonDoc( cloneTriples(@triples()) )
 
   insert: (triples) ->
@@ -81,14 +82,17 @@ class RdfJsonOperation
   OP_REMOVE: 'remove'
 
   @insert: (triplesToAdd) ->
-    op = new RdfJsonOperation(RdfJsonOperation::OP_INSERT, triplesToAdd)
+    new RdfJsonOperation(RdfJsonOperation::OP_INSERT, triplesToAdd)
 
   @remove: (triplesToRemove) ->
-    op = new RdfJsonOperation(RdfJsonOperation::OP_REMOVE, triplesToRemove)
+    new RdfJsonOperation(RdfJsonOperation::OP_REMOVE, triplesToRemove)
 
   constructor: (operation, triples) ->
     @operation = () -> operation
     @triples = () -> triples
+
+  clone: () ->
+    new RdfJsonOperation(@operation(), cloneTriples(@triples()))
 
 
 rdfJson =
@@ -111,7 +115,10 @@ rdfJson =
 
     return newSnapshot
 
-  transform: (op1, op2, side) -> null    # TODO
+  # return clone of op1, transformed by op2
+  # side is "left" or "right"
+  # "left": op2 to be applied first, "right": op1 first
+  transform: (op1, op2, side) -> op1.clone()    # TODO
 
 
 if(WEB)
