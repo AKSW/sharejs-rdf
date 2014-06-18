@@ -12,10 +12,8 @@
   RdfJsonOperation = rdfJson.Operation;
 
   describe('sharejs-rdf-json', function() {
-    describe('type object', function() {
-      return it('is named rdf-json', function() {
-        return expect(rdfJson.name).toEqual('rdf-json');
-      });
+    it('is named rdf-json', function() {
+      return expect(rdfJson.name).toEqual('rdf-json');
     });
     describe('create method', function() {
       var doc;
@@ -123,12 +121,103 @@
         newSnapshot = rdfJson.apply(snapshot, op);
         return expect(newSnapshot.triples()).toEqual(afterInsertionShouldBe);
       });
-      return it('does deletion', function() {
+      it('does deletion', function() {
         var newSnapshot, op, snapshot;
         snapshot = new RdfJsonDoc(testTriples);
         op = RdfJsonOperation.remove(testDeletionTriples);
         newSnapshot = rdfJson.apply(snapshot, op);
         return expect(newSnapshot.triples()).toEqual(afterDeletionShouldBe);
+      });
+      return describe('transform method', function() {
+        var insertion1, removal1, testCase, testCases, _i, _len, _results;
+        insertion1 = {
+          'http://example.com/persons/john': {
+            'http://example.com/ontology#name': [
+              {
+                type: 'literal',
+                value: 'John R. Smith'
+              }, {
+                type: 'literal',
+                value: 'John Richard Smith'
+              }
+            ]
+          }
+        };
+        removal1 = {
+          'http://example.com/persons/john': {
+            'http://example.com/ontology#name': [
+              {
+                type: 'literal',
+                value: 'John Richard Smith'
+              }
+            ]
+          }
+        };
+        testCases = [
+          {
+            label: 'transforms op1:insert, op2:remove',
+            op1: RdfJsonOperation.insert(insertion1),
+            op2: RdfJsonOperation.remove(removal1),
+            doc: {
+              'http://example.com/persons/john': {
+                'http://example.com/ontology#name': [
+                  {
+                    type: 'literal',
+                    value: 'John Smith'
+                  }
+                ]
+              },
+              'http://example.com/persons/andy': {
+                'http://example.com/ontology#name': [
+                  {
+                    type: 'literal',
+                    value: 'Andy Smith'
+                  }
+                ]
+              }
+            },
+            should_be: {
+              'http://example.com/persons/john': {
+                'http://example.com/ontology#name': [
+                  {
+                    type: 'literal',
+                    value: 'John Smith'
+                  }, {
+                    type: 'literal',
+                    value: 'John R. Smith'
+                  }
+                ]
+              },
+              'http://example.com/persons/andy': {
+                'http://example.com/ontology#name': [
+                  {
+                    type: 'literal',
+                    value: 'Andy Smith'
+                  }
+                ]
+              }
+            }
+          }
+        ];
+        _results = [];
+        for (_i = 0, _len = testCases.length; _i < _len; _i++) {
+          testCase = testCases[_i];
+          _results.push(it(testCase.label, function() {
+            var op1, op1_transformed, op2, op2_transformed, snapshot, snapshot_1, snapshot_2;
+            op1 = testCase.op1;
+            op2 = testCase.op2;
+            op1_transformed = rdfJson.transform(op1, op2, 'left');
+            op2_transformed = rdfJson.transform(op2, op1, 'right');
+            snapshot = new RdfJsonDoc(testCase.doc);
+            snapshot_1 = rdfJson.apply(snapshot, op1);
+            snapshot_1 = rdfJson.apply(snapshot_1, op2_transformed);
+            snapshot_2 = rdfJson.apply(snapshot, op2);
+            snapshot_2 = rdfJson.apply(snapshot_2, op1_transformed);
+            expect(snapshot_1.triples()).toEqual(testCase.should_be);
+            return expect(snapshot_2.triples()).toEqual(testCase.should_be);
+          }));
+        }
+        return _results;
       });
     });
   });

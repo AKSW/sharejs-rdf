@@ -8,9 +8,8 @@ RdfJsonOperation = rdfJson.Operation
 
 describe 'sharejs-rdf-json', () ->
 
-  describe 'type object', () ->
-    it 'is named rdf-json', () ->
-      expect(rdfJson.name).toEqual('rdf-json')
+  it 'is named rdf-json', () ->
+    expect(rdfJson.name).toEqual('rdf-json')
 
 
   describe 'create method', () ->
@@ -83,4 +82,64 @@ describe 'sharejs-rdf-json', () ->
 
       newSnapshot = rdfJson.apply(snapshot, op)
       expect(newSnapshot.triples()).toEqual afterDeletionShouldBe
-    
+
+
+    # check if snapshot(apply(op1); apply(transform(op2, op1, 'right')))
+    #          ==
+    #          snapshot(apply(op2); apply(transform(op1, op2, 'left')))
+    describe 'transform method', () ->
+
+      insertion1 =
+        'http://example.com/persons/john':
+          'http://example.com/ontology#name': [
+            { type: 'literal', value: 'John R. Smith' },
+            { type: 'literal', value: 'John Richard Smith' }
+          ]
+
+      removal1 =
+        'http://example.com/persons/john':
+          'http://example.com/ontology#name': [
+            { type: 'literal', value: 'John Richard Smith' }
+          ]
+
+      testCases = [
+        {
+          label: 'transforms op1:insert, op2:remove'
+          op1: RdfJsonOperation.insert insertion1
+          op2: RdfJsonOperation.remove removal1
+          doc:
+            'http://example.com/persons/john':
+              'http://example.com/ontology#name':
+                [ { type: 'literal', value: 'John Smith' } ]
+            'http://example.com/persons/andy':
+              'http://example.com/ontology#name':
+                [ { type: 'literal', value: 'Andy Smith' } ]
+
+          should_be:
+            'http://example.com/persons/john':
+              'http://example.com/ontology#name':
+                [ { type: 'literal', value: 'John Smith' }, { type: 'literal', value: 'John R. Smith' } ]
+            'http://example.com/persons/andy':
+              'http://example.com/ontology#name':
+                [ { type: 'literal', value: 'Andy Smith' } ]
+
+        }
+      ]
+
+      for testCase in testCases
+        it testCase.label, () ->
+          op1 = testCase.op1
+          op2 = testCase.op2
+          op1_transformed = rdfJson.transform(op1, op2, 'left')
+          op2_transformed = rdfJson.transform(op2, op1, 'right')
+
+          snapshot = new RdfJsonDoc(testCase.doc)
+
+          snapshot_1 = rdfJson.apply(snapshot, op1)
+          snapshot_1 = rdfJson.apply(snapshot_1, op2_transformed)
+
+          snapshot_2 = rdfJson.apply(snapshot, op2)
+          snapshot_2 = rdfJson.apply(snapshot_2, op1_transformed)
+
+          expect(snapshot_1.triples()).toEqual testCase.should_be
+          expect(snapshot_2.triples()).toEqual testCase.should_be
