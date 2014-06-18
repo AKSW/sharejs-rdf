@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "dependencies": {
     "jsonld": "~0.2.10",
-    "share": "<0.7"
+    "share": "<0.7",
+    "spark-md5": "~0.0.5"
   },
   "devDependencies": {
     "grunt": "~0.4.1",
