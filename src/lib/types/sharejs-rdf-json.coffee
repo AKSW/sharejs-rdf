@@ -80,7 +80,13 @@ class RdfJsonDoc
       _export[subjectUri] = {}
       for predicateUri, objects of predicates
         _export[subjectUri][predicateUri] = []
+        objectHashes = []
         for objectHash, object of objects
+          objectHashes.push objectHash
+
+        objectHashes.sort()
+        for objectHash in objectHashes
+          object = objects[objectHash]
           _export[subjectUri][predicateUri].push object
 
     return _export

@@ -1,4 +1,5 @@
-require('jasmine-expect')
+require 'jasmine-expect'
+require './matchers/triples'
 
 rdfJson = require '../lib/types/sharejs-rdf-json'
 
@@ -21,14 +22,14 @@ describe 'RdfJsonOperation', () ->
     op = new RdfJsonOperation(RdfJsonOperation::OP_INSERT, testTriples)
 
     expect(op.operation()).toEqual RdfJsonOperation::OP_INSERT
-    expect(op.triples()).toEqual testTriples
+    expect(op.triples()).triplesToEqual testTriples
 
   it 'can clone', () ->
     op = new RdfJsonOperation(RdfJsonOperation::OP_INSERT, testTriples)
     clone = op.clone()
 
     expect(clone.operation()).toEqual(op.operation())
-    expect(clone.triples()).toEqual(op.triples())
+    expect(clone.triples()).triplesToEqual(op.triples())
 
 
   describe 'has working factory methods:', () ->
@@ -37,10 +38,10 @@ describe 'RdfJsonOperation', () ->
       op = RdfJsonOperation.insert(testTriples)
 
       expect(op.operation()).toEqual RdfJsonOperation::OP_INSERT
-      expect(op.triples()).toEqual testTriples
+      expect(op.triples()).triplesToEqual testTriples
 
     it 'remove', () ->
       op = RdfJsonOperation.remove(testTriples)
 
       expect(op.operation()).toEqual RdfJsonOperation::OP_REMOVE
-      expect(op.triples()).toEqual testTriples
+      expect(op.triples()).triplesToEqual testTriples

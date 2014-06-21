@@ -9,8 +9,11 @@ module.exports = (grunt) ->
         files: ['src/lib/**/*.coffee']
         tasks: ['coffee:lib']
       coffeeSpec:
-        files: ['src/spec/**/*.coffee']
+        files: ['src/spec/**/*.spec.coffee']
         tasks: ['coffee:spec']
+      coffeeMatches:
+        files: ['src/spec/matchers/*.coffee']
+        tasks: ['coffee:matchers']
       js:
         files: ['lib/**/*.js', 'spec/**/*.spec.js']
         tasks: ['test']
@@ -28,9 +31,15 @@ module.exports = (grunt) ->
       spec:
         expand: true
         cwd: 'src/spec'
-        src: ['**/*.coffee']
+        src: ['**/*.spec.coffee']
         dest: 'spec'
         ext: '.spec.js'
+      matchers:
+        expand: true
+        cwd: 'src/spec/matchers'
+        src: ['*.coffee']
+        dest: 'spec/matchers'
+        ext: '.js'
   )
 
   grunt.registerTask 'test', ['coffee', 'jasmine_node']

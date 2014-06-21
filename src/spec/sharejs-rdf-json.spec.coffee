@@ -1,6 +1,7 @@
-require('jasmine-expect')
+require 'jasmine-expect'
+require './matchers/triples'
 
-jsonld = require('jsonld')
+jsonld = require 'jsonld'
 rdfJson = require '../lib/types/sharejs-rdf-json'
 
 RdfJsonDoc = rdfJson.Doc
@@ -74,107 +75,107 @@ describe 'sharejs-rdf-json', () ->
       op = RdfJsonOperation.insert testInsertionTriples
 
       newSnapshot = rdfJson.apply(snapshot, op)
-      expect(newSnapshot.exportTriples()).toEqual afterInsertionShouldBe
+      expect(newSnapshot.exportTriples()).triplesToEqual afterInsertionShouldBe
 
     it 'does deletion', () ->
       snapshot = new RdfJsonDoc(testTriples)
       op = RdfJsonOperation.remove testDeletionTriples
 
       newSnapshot = rdfJson.apply(snapshot, op)
-      expect(newSnapshot.exportTriples()).toEqual afterDeletionShouldBe
+      expect(newSnapshot.exportTriples()).triplesToEqual afterDeletionShouldBe
 
 
-    describe 'transform method', () ->
+  describe 'transform method', () ->
 
-      describe 'basic testing:', () ->
+    describe 'basic testing:', () ->
 
-        op1 = RdfJsonOperation.insert(
-          'http://example.com/persons/john':
-            'http://example.com/ontology#name':
-              [ { type: 'literal', value: 'John Richard Smith' } ]
-        )
+      op1 = RdfJsonOperation.insert(
+        'http://example.com/persons/john':
+          'http://example.com/ontology#name':
+            [ { type: 'literal', value: 'John Richard Smith' } ]
+      )
 
-        op2 = RdfJsonOperation.insert(
-          'http://example.com/persons/john':
-            'http://example.com/ontology#name':
-              [ { type: 'literal', value: 'John R. Smith' } ]
-        )
+      op2 = RdfJsonOperation.insert(
+        'http://example.com/persons/john':
+          'http://example.com/ontology#name':
+            [ { type: 'literal', value: 'John R. Smith' } ]
+      )
 
-        op1Clone = op1.clone()
-        op2Clone = op2.clone()
+      op1Clone = op1.clone()
+      op2Clone = op2.clone()
 
-        spyOn(op1, 'clone');
-        spyOn(op2, 'clone');
+      spyOn(op1, 'clone');
+      spyOn(op2, 'clone');
 
-        op1_transformed = rdfJson.transform(op1, op2, 'left')
-        it 'clones op1', () ->
-          expect(op1.clone).toHaveBeenCalled
+      op1_transformed = rdfJson.transform(op1, op2, 'left')
+      it 'clones op1', () ->
+        expect(op1.clone).toHaveBeenCalled
 
-        op2_transformed = rdfJson.transform(op2, op1, 'right')
-        it 'clones op2', () ->
-          expect(op2.clone).toHaveBeenCalled
+      op2_transformed = rdfJson.transform(op2, op1, 'right')
+      it 'clones op2', () ->
+        expect(op2.clone).toHaveBeenCalled
 
-        it 'does not modify the input operations', () ->
-          expect(op1.triples()).toEqual op1Clone.triples()
-          expect(op2.triples()).toEqual op2Clone.triples()
+      it 'does not modify the input operations', () ->
+        expect(op1.triples()).triplesToEqual op1Clone.triples()
+        expect(op2.triples()).triplesToEqual op2Clone.triples()
 
 
-      # check if snapshot(apply(op1); apply(transform(op2, op1, 'right')))
-      #          ==
-      #          snapshot(apply(op2); apply(transform(op1, op2, 'left')))
-      describe 'functional testing:', () ->
+    # check if snapshot(apply(op1); apply(transform(op2, op1, 'right')))
+    #          ==
+    #          snapshot(apply(op2); apply(transform(op1, op2, 'left')))
+    describe 'functional testing:', () ->
 
-        insertion1 =
-          'http://example.com/persons/john':
-            'http://example.com/ontology#name': [
-              { type: 'literal', value: 'John R. Smith' },
-              { type: 'literal', value: 'John Richard Smith' }
-            ]
+      insertion1 =
+        'http://example.com/persons/john':
+          'http://example.com/ontology#name': [
+            { type: 'literal', value: 'John R. Smith' },
+            { type: 'literal', value: 'John Richard Smith' }
+          ]
 
-        removal1 =
-          'http://example.com/persons/john':
-            'http://example.com/ontology#name': [
-              { type: 'literal', value: 'John Richard Smith' }
-            ]
+      removal1 =
+        'http://example.com/persons/john':
+          'http://example.com/ontology#name': [
+            { type: 'literal', value: 'John Richard Smith' }
+          ]
 
-        testCases = [
-          {
-            label: 'transforms op1:insert, op2:remove'
-            op1: RdfJsonOperation.insert insertion1
-            op2: RdfJsonOperation.remove removal1
-            doc:
-              'http://example.com/persons/john':
-                'http://example.com/ontology#name':
-                  [ { type: 'literal', value: 'John Smith' } ]
-              'http://example.com/persons/andy':
-                'http://example.com/ontology#name':
-                  [ { type: 'literal', value: 'Andy Smith' } ]
+      testCases = [
+        {
+          label: 'transforms op1:insert, op2:remove'
+          op1: RdfJsonOperation.insert insertion1
+          op2: RdfJsonOperation.remove removal1
+          doc:
+            'http://example.com/persons/john':
+              'http://example.com/ontology#name':
+                [ { type: 'literal', value: 'John Smith' } ]
+            'http://example.com/persons/andy':
+              'http://example.com/ontology#name':
+                [ { type: 'literal', value: 'Andy Smith' } ]
 
-            should_be:
-              'http://example.com/persons/john':
-                'http://example.com/ontology#name':
-                  [ { type: 'literal', value: 'John Smith' }, { type: 'literal', value: 'John R. Smith' } ]
-              'http://example.com/persons/andy':
-                'http://example.com/ontology#name':
-                  [ { type: 'literal', value: 'Andy Smith' } ]
+          should_be:
+            'http://example.com/persons/john':
+              'http://example.com/ontology#name':
+                [ { type: 'literal', value: 'John Smith' }, { type: 'literal', value: 'John R. Smith' } ]
+            'http://example.com/persons/andy':
+              'http://example.com/ontology#name':
+                [ { type: 'literal', value: 'Andy Smith' } ]
 
-          }
-        ]
+        }
+      ]
 
-        for testCase in testCases
-          it testCase.label, () ->
-            op1 = testCase.op1
-            op2 = testCase.op2
-            op1_transformed = rdfJson.transform(op1, op2, 'left')
-            op2_transformed = rdfJson.transform(op2, op1, 'right')
+      for testCase in testCases
+        it testCase.label, () ->
+          op1 = testCase.op1
+          op2 = testCase.op2
+          op1_transformed = rdfJson.transform(op1, op2, 'left')
+          op2_transformed = rdfJson.transform(op2, op1, 'right')
 
-            snapshot = new RdfJsonDoc(testCase.doc)
+          snapshot = new RdfJsonDoc(testCase.doc)
 
-            snapshot_1 = rdfJson.apply(snapshot, op1)
-            snapshot_1 = rdfJson.apply(snapshot_1, op2_transformed)
+          snapshot_1 = rdfJson.apply(snapshot, op1)
+          snapshot_1 = rdfJson.apply(snapshot_1, op2_transformed)
 
-            snapshot_2 = rdfJson.apply(snapshot, op2)
-            snapshot_2 = rdfJson.apply(snapshot_2, op1_transformed)
+          snapshot_2 = rdfJson.apply(snapshot, op2)
+          snapshot_2 = rdfJson.apply(snapshot_2, op1_transformed)
 
-            expect(snapshot_1.exportTriples()).toEqual testCase.should_be
-            expect(snapshot_2.exportTriples()).toEqual testCase.should_be
+          expect(snapshot_1.exportTriples()).triplesToEqual testCase.should_be
+          expect(snapshot_2.exportTriples()).triplesToEqual testCase.should_be

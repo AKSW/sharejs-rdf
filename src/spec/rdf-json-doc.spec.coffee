@@ -1,4 +1,5 @@
-require('jasmine-expect')
+require 'jasmine-expect'
+require './matchers/triples'
 
 rdfJson = require '../lib/types/sharejs-rdf-json'
 
@@ -19,17 +20,17 @@ describe 'RdfJsonDoc', () ->
 
   it 'has empty triples object', () ->
     doc = new RdfJsonDoc()
-    expect(doc.exportTriples()).toEqual {}
+    expect(doc.exportTriples()).triplesToEqual {}
 
   it 'can insert', () ->
     doc = new RdfJsonDoc()
     doc.insert testTriples
-    expect(doc.exportTriples()).toEqual testTriples
+    expect(doc.exportTriples()).triplesToEqual testTriples
 
   it 'can clone', () ->
     doc = new RdfJsonDoc(testTriples)
     clone = doc.clone()
-    expect(clone.exportTriples()).toEqual testTriples
+    expect(clone.exportTriples()).triplesToEqual testTriples
 
   it 'clone is independent of original document', () ->
     doc = new RdfJsonDoc(testTriples)
@@ -40,12 +41,12 @@ describe 'RdfJsonDoc', () ->
         'http://example.com/ontology#name':
           [ { type: 'literal', value: 'John R. Smith' } ]
     )
-    expect(doc.exportTriples()).toEqual testTriples
+    expect(doc.exportTriples()).triplesToEqual testTriples
 
   it 'can delete', () ->
     doc = new RdfJsonDoc(testTriples)
     doc.remove testTriples
-    expect(doc.exportTriples()).toEqual {}
+    expect(doc.exportTriples()).triplesToEqual {}
 
   it 'insertion of duplicates causes no change', () ->
     doc = new RdfJsonDoc(testTriples)
@@ -54,12 +55,12 @@ describe 'RdfJsonDoc', () ->
         'http://example.com/ontology#name':
           [ { type: 'literal', value: 'Andy Smith' } ]
     )
-    expect(doc.exportTriples()).toEqual testTriples
+    expect(doc.exportTriples()).triplesToEqual testTriples
 
   it 'removal of empty triple set causes no change', () ->
     doc = new RdfJsonDoc(testTriples)
     doc.remove {}
-    expect(doc.exportTriples()).toEqual testTriples
+    expect(doc.exportTriples()).triplesToEqual testTriples
 
   it 'removal of non-existing triple set causes no change', () ->
     doc = new RdfJsonDoc(testTriples)
@@ -68,7 +69,7 @@ describe 'RdfJsonDoc', () ->
         'http://example.com/ontology#age':
           [ { type: 'literal', value: '20', datatype: 'http://www.w3.org/2001/XMLSchema#integer' } ]
     )
-    expect(doc.exportTriples()).toEqual testTriples
+    expect(doc.exportTriples()).triplesToEqual testTriples
 
   it 'throws error on invalid subject', () ->
     doc = new RdfJsonDoc()
@@ -201,24 +202,24 @@ describe 'RDFJsonDoc (more complex insertion/deletion)', () ->
   doc = new RdfJsonDoc(testTriples1)
 
   it 'is initialized properly', () ->
-    expect(doc.exportTriples()).toEqual testTriples1
+    expect(doc.exportTriples()).triplesToEqual testTriples1
 
   it 'can add triple to existing subject and predicate', () ->
     doc.insert testTriples2
-    expect(doc.exportTriples()).toEqual afterTriples2ShouldBe
+    expect(doc.exportTriples()).triplesToEqual afterTriples2ShouldBe
 
   it 'can add triple to existing subject', () ->
     doc.insert testTriples3
-    expect(doc.exportTriples()).toEqual afterTriples3ShouldBe
+    expect(doc.exportTriples()).triplesToEqual afterTriples3ShouldBe
 
   it 'can add triple (new subject)', () ->
     doc.insert testTriples4
-    expect(doc.exportTriples()).toEqual afterTriples4ShouldBe
+    expect(doc.exportTriples()).triplesToEqual afterTriples4ShouldBe
 
   it 'can delete two of three triples of the same subject and predicate', () ->
     doc.remove deletion1
-    expect(doc.exportTriples()).toEqual afterDeletion1ShouldBe
+    expect(doc.exportTriples()).triplesToEqual afterDeletion1ShouldBe
 
   it 'can delete the only triple of this subject', () ->
     doc.remove deletion2
-    expect(doc.exportTriples()).toEqual afterDeletion2ShouldBe
+    expect(doc.exportTriples()).triplesToEqual afterDeletion2ShouldBe
