@@ -15,17 +15,6 @@ hashTripleObject = (obj) ->
   hashObject obj, ['type', 'value', 'lang', 'datatype']
 
 
-objectPropertiesToArray = (object) ->
-  array = []
-  array.push value for key, value of object
-
-  return array.sort (a, b) ->
-    if typeof a.value == "string" || typeof b.value == "string"    # should always be the case
-      aValue.localeCompare b.value
-    else
-      0
-
-
 cloneTriples = (triples) ->
   triplesClone = {}
 
