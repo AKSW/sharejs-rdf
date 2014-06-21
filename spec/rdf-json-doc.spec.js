@@ -37,19 +37,19 @@
     it('has empty triples object', function() {
       var doc;
       doc = new RdfJsonDoc();
-      return expect(doc.triples()).toEqual({});
+      return expect(doc.exportTriples()).toEqual({});
     });
     it('can insert', function() {
       var doc;
       doc = new RdfJsonDoc();
       doc.insert(testTriples);
-      return expect(doc.triples()).toEqual(testTriples);
+      return expect(doc.exportTriples()).toEqual(testTriples);
     });
     it('can clone', function() {
       var clone, doc;
       doc = new RdfJsonDoc(testTriples);
       clone = doc.clone();
-      return expect(clone.triples()).toEqual(testTriples);
+      return expect(clone.exportTriples()).toEqual(testTriples);
     });
     it('clone is independent of original document', function() {
       var clone, doc;
@@ -65,19 +65,34 @@
           ]
         }
       });
-      return expect(doc.triples()).toEqual(testTriples);
+      return expect(doc.exportTriples()).toEqual(testTriples);
     });
     it('can delete', function() {
       var doc;
       doc = new RdfJsonDoc(testTriples);
       doc.remove(testTriples);
-      return expect(doc.triples()).toEqual({});
+      return expect(doc.exportTriples()).toEqual({});
+    });
+    it('insertion of duplicates causes no change', function() {
+      var doc;
+      doc = new RdfJsonDoc(testTriples);
+      doc.insert({
+        'http://example.com/persons/andy': {
+          'http://example.com/ontology#name': [
+            {
+              type: 'literal',
+              value: 'Andy Smith'
+            }
+          ]
+        }
+      });
+      return expect(doc.exportTriples()).toEqual(testTriples);
     });
     it('removal of empty triple set causes no change', function() {
       var doc;
       doc = new RdfJsonDoc(testTriples);
       doc.remove({});
-      return expect(doc.triples()).toEqual(testTriples);
+      return expect(doc.exportTriples()).toEqual(testTriples);
     });
     it('removal of non-existing triple set causes no change', function() {
       var doc;
@@ -93,7 +108,7 @@
           ]
         }
       });
-      return expect(doc.triples()).toEqual(testTriples);
+      return expect(doc.exportTriples()).toEqual(testTriples);
     });
     it('throws error on invalid subject', function() {
       var doc;
@@ -374,27 +389,27 @@
     };
     doc = new RdfJsonDoc(testTriples1);
     it('is initialized properly', function() {
-      return expect(doc.triples()).toEqual(testTriples1);
+      return expect(doc.exportTriples()).toEqual(testTriples1);
     });
     it('can add triple to existing subject and predicate', function() {
       doc.insert(testTriples2);
-      return expect(doc.triples()).toEqual(afterTriples2ShouldBe);
+      return expect(doc.exportTriples()).toEqual(afterTriples2ShouldBe);
     });
     it('can add triple to existing subject', function() {
       doc.insert(testTriples3);
-      return expect(doc.triples()).toEqual(afterTriples3ShouldBe);
+      return expect(doc.exportTriples()).toEqual(afterTriples3ShouldBe);
     });
     it('can add triple (new subject)', function() {
       doc.insert(testTriples4);
-      return expect(doc.triples()).toEqual(afterTriples4ShouldBe);
+      return expect(doc.exportTriples()).toEqual(afterTriples4ShouldBe);
     });
     it('can delete two of three triples of the same subject and predicate', function() {
       doc.remove(deletion1);
-      return expect(doc.triples()).toEqual(afterDeletion1ShouldBe);
+      return expect(doc.exportTriples()).toEqual(afterDeletion1ShouldBe);
     });
     return it('can delete the only triple of this subject', function() {
       doc.remove(deletion2);
-      return expect(doc.triples()).toEqual(afterDeletion2ShouldBe);
+      return expect(doc.exportTriples()).toEqual(afterDeletion2ShouldBe);
     });
   });
 

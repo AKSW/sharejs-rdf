@@ -2,7 +2,47 @@
 WEB = typeof window == 'object' && window.document
 
 
+md5 = (str) ->
+  return SparkMD5.hash str
+
+hashTripleObject = (obj) ->
+  hashObject = (obj, properties) ->
+    str = ""
+    for prop in properties
+      str += "#{prop}:'#{obj[prop]}';" if typeof obj[prop] != "undefined"
+    md5 str
+
+  hashObject obj, ['type', 'value', 'lang', 'datatype']
+
+
+objectPropertiesToArray = (object) ->
+  array = []
+  array.push value for key, value of object
+
+  return array.sort (a, b) ->
+    if typeof a.value == "string" || typeof b.value == "string"    # should always be the case
+      aValue.localeCompare b.value
+    else
+      0
+
+
 cloneTriples = (triples) ->
+  triplesClone = {}
+
+  for subjUri, predicates of triples
+    triplesClone[subjUri] = {}
+    for predUri, objects of predicates
+      triplesClone[subjUri][predUri] = {}
+      for objectHash, object of objects
+        objectClone = {}
+        for objKey, objValue of object
+          objectClone[objKey] = objValue
+        triplesClone[subjUri][predUri][objectHash] = objectClone
+
+  return triplesClone
+
+
+cloneExportTriples = (triples) ->
   triplesClone = {}
 
   for subjUri, predicates of triples
@@ -18,16 +58,37 @@ cloneTriples = (triples) ->
   return triplesClone
 
 
-# triples object format: RDF/JSON - https://dvcs.w3.org/hg/rdf/raw-file/default/rdf-json/index.html
+# triples export format: RDF/JSON - https://dvcs.w3.org/hg/rdf/raw-file/default/rdf-json/index.html
+#
+# internal format: (= but slightly changed export format)
+# "<subject uri>":
+#   "<predicate uri>":
+#     "<hash>": { type: "<object type>", value: "<object value", ... }
+#     ...
+#   ...
+# ...
 class RdfJsonDoc
   constructor: (triples={}) ->
     @_uriRegex = /^\w+:\/\/\w+(\.\w+)+\//
-    @_triples = triples
+    @_triples = {}
+    @insert triples
 
-  triples: () -> @_triples
+  exportTriples: () ->
+    _export = {}
+
+    for subjectUri, predicates of @_triples
+      _export[subjectUri] = {}
+      for predicateUri, objects of predicates
+        _export[subjectUri][predicateUri] = []
+        for objectHash, object of objects
+          _export[subjectUri][predicateUri].push object
+
+    return _export
 
   clone: () ->
-    return new RdfJsonDoc( cloneTriples(@triples()) )
+    doc = new RdfJsonDoc
+    doc._triples = cloneTriples(@_triples)
+    return doc
 
   insert: (triples) ->
     for subjectUri, predicates of triples
@@ -36,8 +97,10 @@ class RdfJsonDoc
       for predicateUri, objects of predicates
         @assertPredicateIsUri(predicateUri, subjectUri)
         @assertObjectsArray(objects, subjectUri, predicateUri)
-        @_triples[subjectUri][predicateUri] = [] if !@_triples[subjectUri][predicateUri]
-        @_triples[subjectUri][predicateUri] = @_triples[subjectUri][predicateUri].concat(objects)
+        @_triples[subjectUri][predicateUri] = {} if !@_triples[subjectUri][predicateUri]
+        for object in objects
+          objectHash = hashTripleObject object
+          @_triples[subjectUri][predicateUri][objectHash] = object
 
   remove: (triples) ->
     for subjectUri, predicates of triples
@@ -48,16 +111,20 @@ class RdfJsonDoc
       for predicateUri, objects of predicates
         @assertPredicateIsUri(predicateUri, subjectUri)
         @assertObjectsArray(objects, subjectUri, predicateUri)
-        continue if !@_triples[subjectUri][predicateUri]
-
         predicateCount++
-        for objectToRemove in objects
-          presentObjects = @_triples[subjectUri][predicateUri]
-          for presentObject, presentObjectIndex in presentObjects
-            if presentObject.type == objectToRemove.type && presentObject.value == objectToRemove.value
-              @_triples[subjectUri][predicateUri] = presentObjects.slice(0, presentObjectIndex).concat( presentObjects.slice(presentObjectIndex+1) )
 
-        if @_triples[subjectUri][predicateUri].length == 0
+        continue if !@_triples[subjectUri][predicateUri]
+        presentObjects = @_triples[subjectUri][predicateUri]
+
+        for objectToRemove in objects
+          objectToRemoveHash = hashTripleObject objectToRemove
+          if presentObjects[objectToRemoveHash]
+            delete @_triples[subjectUri][predicateUri][objectToRemoveHash]
+
+        objectCount = 0
+        objectCount++ for presentObjectHash, presentObject of presentObjects
+
+        if objectCount == 0
           predicateCount--
           delete @_triples[subjectUri][predicateUri]
 
@@ -92,7 +159,7 @@ class RdfJsonOperation
     @triples = () -> triples
 
   clone: () ->
-    new RdfJsonOperation(@operation(), cloneTriples(@triples()))
+    new RdfJsonOperation(@operation(), cloneExportTriples(@triples()))
 
 
 rdfJson =
@@ -118,7 +185,13 @@ rdfJson =
   # return clone of op1, transformed by op2
   # side is "left" or "right"
   # "left": op2 to be applied first, "right": op1 first
-  transform: (op1, op2, side) -> op1.clone()    # TODO
+  # implementation: deletion has precendence (good idea?)
+  transform: (op1, op2, side) ->
+    op1t = op1.clone()
+    if side != 'left' && side != 'right'
+      throw new Error "Bad parameter 'side' given: #{side}"
+
+    return op1t
 
 
 if(WEB)
@@ -129,5 +202,6 @@ if(WEB)
   sharejs.types.rdfJson = rdfJson
 else
   jsonld = require 'jsonld'
+  SparkMD5 = require 'spark-md5'
   module.exports = rdfJson
   # require('./helpers').bootstrapTransform(rdfJson, rdfJson.transformComponent, rdfJson.checkValidOp, rdfJson.append)
