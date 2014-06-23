@@ -119,6 +119,13 @@ describe 'sharejs-rdf-json', () ->
         expect(op1.triples()).triplesToEqual op1Clone.triples()
         expect(op2.triples()).triplesToEqual op2Clone.triples()
 
+      it 'throws error on bad side parameter', () ->
+        side = 'foobar'
+
+        expect( () ->
+          rdfJson.transform(op1, op2, side)
+        ).toThrow new Error "Bad parameter 'side' given: #{side}"
+
 
     # check if snapshot(apply(op1); apply(transform(op2, op1, 'right')))
     #          ==
