@@ -179,7 +179,37 @@
         });
       });
       return describe('functional testing:', function() {
-        var insertion1, removal1, testCase, testCases, _i, _len, _results;
+        var insertion1, insertionRemoval2, insertionRemoval3, removal1, runTest, testCase, testCases, testTriples, _i, _len, _results;
+        runTest = function(op1, op2, doc, should_be) {
+          var op1_transformed, op2_transformed, snapshot, snapshot1, snapshot2;
+          op1_transformed = rdfJson.transform(op1, op2, 'left');
+          op2_transformed = rdfJson.transform(op2, op1, 'right');
+          snapshot = new RdfJsonDoc(doc);
+          snapshot1 = rdfJson.apply(snapshot, op1);
+          snapshot1 = rdfJson.apply(snapshot1, op2_transformed);
+          snapshot2 = rdfJson.apply(snapshot, op2);
+          snapshot2 = rdfJson.apply(snapshot2, op1_transformed);
+          expect(snapshot1.exportTriples()).triplesToEqual(should_be);
+          return expect(snapshot2.exportTriples()).triplesToEqual(should_be);
+        };
+        testTriples = {
+          'http://example.com/persons/john': {
+            'http://example.com/ontology#name': [
+              {
+                type: 'literal',
+                value: 'John Smith'
+              }
+            ]
+          },
+          'http://example.com/persons/andy': {
+            'http://example.com/ontology#name': [
+              {
+                type: 'literal',
+                value: 'Andy Smith'
+              }
+            ]
+          }
+        };
         insertion1 = {
           'http://example.com/persons/john': {
             'http://example.com/ontology#name': [
@@ -203,17 +233,41 @@
             ]
           }
         };
+        insertionRemoval2 = {
+          'http://example.com/persons/john': {
+            'http://example.com/ontology#name': [
+              {
+                type: 'literal',
+                value: 'John Smith'
+              }
+            ]
+          }
+        };
+        insertionRemoval3 = {
+          'http://example.com/persons/john': {
+            'http://example.com/ontology#name': [
+              {
+                type: 'literal',
+                value: 'John R. Smith'
+              }
+            ]
+          }
+        };
         testCases = [
           {
-            label: 'transforms op1:insert, op2:remove',
+            label: 'transforms op1:<insert new>, op2:<remove one of new ones>',
             op1: RdfJsonOperation.insert(insertion1),
             op2: RdfJsonOperation.remove(removal1),
-            doc: {
+            doc: testTriples,
+            should_be: {
               'http://example.com/persons/john': {
                 'http://example.com/ontology#name': [
                   {
                     type: 'literal',
                     value: 'John Smith'
+                  }, {
+                    type: 'literal',
+                    value: 'John R. Smith'
                   }
                 ]
               },
@@ -225,7 +279,30 @@
                   }
                 ]
               }
-            },
+            }
+          }, {
+            label: 'transforms op1:<insert already existing>, op2:<remove this triples>',
+            op1: RdfJsonOperation.insert(insertionRemoval2),
+            op2: RdfJsonOperation.remove(insertionRemoval2),
+            doc: testTriples,
+            should_be: {
+              'http://example.com/persons/john': {
+                'http://example.com/ontology#name': []
+              },
+              'http://example.com/persons/andy': {
+                'http://example.com/ontology#name': [
+                  {
+                    type: 'literal',
+                    value: 'Andy Smith'
+                  }
+                ]
+              }
+            }
+          }, {
+            label: 'transforms op1:<remove not-yet-existing>, op2:<insert this triple>',
+            op1: RdfJsonOperation.remove(insertionRemoval3),
+            op2: RdfJsonOperation.insert(insertionRemoval3),
+            doc: testTriples,
             should_be: {
               'http://example.com/persons/john': {
                 'http://example.com/ontology#name': [
@@ -253,18 +330,7 @@
         for (_i = 0, _len = testCases.length; _i < _len; _i++) {
           testCase = testCases[_i];
           _results.push(it(testCase.label, function() {
-            var op1, op1_transformed, op2, op2_transformed, snapshot, snapshot_1, snapshot_2;
-            op1 = testCase.op1;
-            op2 = testCase.op2;
-            op1_transformed = rdfJson.transform(op1, op2, 'left');
-            op2_transformed = rdfJson.transform(op2, op1, 'right');
-            snapshot = new RdfJsonDoc(testCase.doc);
-            snapshot_1 = rdfJson.apply(snapshot, op1);
-            snapshot_1 = rdfJson.apply(snapshot_1, op2_transformed);
-            snapshot_2 = rdfJson.apply(snapshot, op2);
-            snapshot_2 = rdfJson.apply(snapshot_2, op1_transformed);
-            expect(snapshot_1.exportTriples()).triplesToEqual(testCase.should_be);
-            return expect(snapshot_2.exportTriples()).triplesToEqual(testCase.should_be);
+            return runTest(testCase.op1, testCase.op2, testCase.doc, testCase.should_be);
           }));
         }
         return _results;

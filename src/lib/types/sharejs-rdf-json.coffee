@@ -75,6 +75,32 @@ exportTriplesIntersect = (triples1, triples2) ->
   return [ intersect, triplesCount ]
 
 
+exportTriplesDifference = (triplesMinuend, triplesSubtrahend) ->
+  triplesDiff = {}
+
+  for subjUri, predicates of triplesMinuend
+    for predUri, objects of predicates
+      objectsDiff = []
+
+      if triplesSubtrahend[subjUri] && triplesSubtrahend[subjUri][predUri]
+        objects2 = triplesSubtrahend[subjUri][predUri]
+        for object1 in objects
+          for object2 in objects2
+            if (object1.type  != object2.type ||
+                object1.value != object2.value ||
+                object1.lang  != object2.lang ||
+                object1.datatype != object2.datatype)
+              objectsDiff.push object1
+      else
+        objectsDiff = objects
+
+      if objectsDiff.length > 0
+        triplesDiff[subjUri] = {} if !triplesDiff[subjUri]
+        triplesDiff[subjUri][predUri] = objectsDiff
+
+  return triplesDiff
+
+
 # triples export format: RDF/JSON - https://dvcs.w3.org/hg/rdf/raw-file/default/rdf-json/index.html
 #
 # internal format: (= but slightly changed export format)
@@ -232,12 +258,8 @@ rdfJson =
     return op1t if triplesIntersectCount == 0
 
 
-    if op2.operation() == RdfJsonOperation::OP_INSERT
-      # op2=insertion, then op1=deletion
-      
-    else
-      # op2=deletion, then op1=insertion
-
+    triplesDiff = exportTriplesDifference op1.getTriples(), op2.getTriples()
+    op1t.setTriples triplesDiff
 
     return op1t
 
