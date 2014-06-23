@@ -116,8 +116,8 @@ describe 'sharejs-rdf-json', () ->
         expect(op2.clone).toHaveBeenCalled
 
       it 'does not modify the input operations', () ->
-        expect(op1.triples()).triplesToEqual op1Clone.triples()
-        expect(op2.triples()).triplesToEqual op2Clone.triples()
+        expect(op1.getTriples()).triplesToEqual op1Clone.getTriples()
+        expect(op2.getTriples()).triplesToEqual op2Clone.getTriples()
 
       it 'throws error on bad side parameter', () ->
         side = 'foobar'

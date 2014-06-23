@@ -166,9 +166,16 @@
         it('clones op2', function() {
           return expect(op2.clone).toHaveBeenCalled;
         });
-        return it('does not modify the input operations', function() {
-          expect(op1.triples()).triplesToEqual(op1Clone.triples());
-          return expect(op2.triples()).triplesToEqual(op2Clone.triples());
+        it('does not modify the input operations', function() {
+          expect(op1.getTriples()).triplesToEqual(op1Clone.getTriples());
+          return expect(op2.getTriples()).triplesToEqual(op2Clone.getTriples());
+        });
+        return it('throws error on bad side parameter', function() {
+          var side;
+          side = 'foobar';
+          return expect(function() {
+            return rdfJson.transform(op1, op2, side);
+          }).toThrow(new Error("Bad parameter 'side' given: " + side));
         });
       });
       return describe('functional testing:', function() {

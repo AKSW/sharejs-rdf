@@ -47,6 +47,34 @@ cloneExportTriples = (triples) ->
   return triplesClone
 
 
+exportTriplesIntersect = (triples1, triples2) ->
+  intersect = {}
+  triplesCount = 0
+
+  for subjUri1, predicates1 of triples1
+    continue if !triples2[subjUri1]
+
+    for predUri1, objects1 of predicates1
+      continue if !triples2[subjUri1][predUri1]
+      objects2 = triples2[subjUri1][predUri1]
+      objects_intersect = []
+
+      for object1 in objects1
+        for object2 in objects2
+          if (object1.type  == object2.type &&
+              object1.value == object2.value &&
+              object1.lang  == object2.lang &&
+              object1.datatype == object2.datatype)
+            objects_intersect.push object1
+            triplesCount++
+
+      if objects_intersect.length > 0
+        intersect[subjUri1] = {} if !intersect[subjUri1]
+        intersect[subjUri1][predUri1] = objects_intersect
+
+  return [ intersect, triplesCount ]
+
+
 # triples export format: RDF/JSON - https://dvcs.w3.org/hg/rdf/raw-file/default/rdf-json/index.html
 #
 # internal format: (= but slightly changed export format)
@@ -149,12 +177,18 @@ class RdfJsonOperation
   @remove: (triplesToRemove) ->
     new RdfJsonOperation(RdfJsonOperation::OP_REMOVE, triplesToRemove)
 
+  # triples in export format
   constructor: (operation, triples) ->
     @operation = () -> operation
-    @triples = () -> triples
+    @_triples = triples
 
   clone: () ->
-    new RdfJsonOperation(@operation(), cloneExportTriples(@triples()))
+    new RdfJsonOperation(@operation(), cloneExportTriples(@getTriples()))
+
+  getTriples: () -> @_triples
+
+  setTriples: (triples) -> @_triples = triples
+
 
 
 rdfJson =
@@ -171,20 +205,39 @@ rdfJson =
 
     switch op.operation()
       when RdfJsonOperation::OP_INSERT
-        newSnapshot.insert op.triples()
+        newSnapshot.insert op.getTriples()
       when RdfJsonOperation::OP_REMOVE
-        newSnapshot.remove op.triples()
+        newSnapshot.remove op.getTriples()
 
     return newSnapshot
 
   # return clone of op1, transformed by op2
   # side is "left" or "right"
   # "left": op2 to be applied first, "right": op1 first
-  # implementation: deletion has precendence (good idea?)
   transform: (op1, op2, side) ->
     op1t = op1.clone()
+    op1First = side == 'right'
+
     if side != 'left' && side != 'right'
       throw new Error "Bad parameter 'side' given: #{side}"
+
+    return op1t if op1First    # we are only modifying op1 if op2 is applied first
+
+    # insertion + insertion or deletion + deletion is uncritical
+    return op1t if op1.operation() == op2.operation()
+
+    [triplesIntersect, triplesIntersectCount] = exportTriplesIntersect op1.getTriples(), op2.getTriples()
+
+    # op1 & op2 don't affect the same triples? => uncritical
+    return op1t if triplesIntersectCount == 0
+
+
+    if op2.operation() == RdfJsonOperation::OP_INSERT
+      # op2=insertion, then op1=deletion
+      
+    else
+      # op2=deletion, then op1=insertion
+
 
     return op1t
 

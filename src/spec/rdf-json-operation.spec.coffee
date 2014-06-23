@@ -18,18 +18,24 @@ describe 'RdfJsonOperation', () ->
     expect(RdfJsonOperation::OP_INSERT).toEqual 'insert'
     expect(RdfJsonOperation::OP_REMOVE).toEqual 'remove'
 
-  it 'has working constructor', () ->
+  it 'has working constructor & getters', () ->
     op = new RdfJsonOperation(RdfJsonOperation::OP_INSERT, testTriples)
 
     expect(op.operation()).toEqual RdfJsonOperation::OP_INSERT
-    expect(op.triples()).triplesToEqual testTriples
+    expect(op.getTriples()).triplesToEqual testTriples
+
+  it 'can set triples', () ->
+    op = new RdfJsonOperation(RdfJsonOperation::OP_INSERT, {})
+
+    op.setTriples testTriples
+    expect(op.getTriples()).triplesToEqual testTriples
 
   it 'can clone', () ->
     op = new RdfJsonOperation(RdfJsonOperation::OP_INSERT, testTriples)
     clone = op.clone()
 
-    expect(clone.operation()).toEqual(op.operation())
-    expect(clone.triples()).triplesToEqual(op.triples())
+    expect(clone.operation()).toEqual op.operation()
+    expect(clone.getTriples()).triplesToEqual op.getTriples()
 
 
   describe 'has working factory methods:', () ->
@@ -38,10 +44,10 @@ describe 'RdfJsonOperation', () ->
       op = RdfJsonOperation.insert(testTriples)
 
       expect(op.operation()).toEqual RdfJsonOperation::OP_INSERT
-      expect(op.triples()).triplesToEqual testTriples
+      expect(op.getTriples()).triplesToEqual testTriples
 
     it 'remove', () ->
       op = RdfJsonOperation.remove(testTriples)
 
       expect(op.operation()).toEqual RdfJsonOperation::OP_REMOVE
-      expect(op.triples()).triplesToEqual testTriples
+      expect(op.getTriples()).triplesToEqual testTriples
