@@ -1,5 +1,5 @@
 
-WEB = typeof window == 'object' && window.document
+WEB = true if typeof window == 'object' && window.document
 
 
 md5 = (str) ->
@@ -264,14 +264,12 @@ rdfJson =
     return op1t
 
 
-if(WEB)
+if WEB?
   jsonld = window.jsonld
   sharejs = window.sharejs
   sharejs.types ||= {}
-  # sharejs._bt(rdfJson, rdfJson.transformComponent, rdfJson.checkValidOp, rdfJson.append)
   sharejs.types.rdfJson = rdfJson
 else
   jsonld = require 'jsonld'
   SparkMD5 = require 'spark-md5'
   module.exports = rdfJson
-  # require('./helpers').bootstrapTransform(rdfJson, rdfJson.transformComponent, rdfJson.checkValidOp, rdfJson.append)
