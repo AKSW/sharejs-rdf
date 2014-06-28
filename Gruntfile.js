@@ -1,8 +1,8 @@
 // Generated on 2014-05-06 using generator-nodeapp 0.0.1
 'use strict';
 
-var host = 'localhost';
 var serverConfig = {
+  host: 'localhost',
   ports: {
     client: '4000',
     debug: '5858',
@@ -13,17 +13,12 @@ var serverConfig = {
   }
 };
 
-module.exports = function(grunt) {
+module.exports = function (grunt) {
 
   require('load-grunt-tasks')(grunt);
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
-    env: {
-      dev: {
-        SHAREJS_DB: serverConfig.sharejs.db
-      }
-    },
     nodemon: {
       debug: {
         options: {
@@ -40,7 +35,7 @@ module.exports = function(grunt) {
       debug: {
         options: {
           'web-port': serverConfig.ports.inspector,
-          'web-host': host,
+          'web-host': serverConfig.host,
           'debug-port': serverConfig.ports.debug,
           'save-live-edit': true
         }
@@ -48,11 +43,11 @@ module.exports = function(grunt) {
     },
     open : {
       debug: {
-        path: 'http://' + host + ':' + serverConfig.ports.inspector + '/debug?port=' + serverConfig.ports.debug,
+        path: 'http://' + serverConfig.host + ':' + serverConfig.ports.inspector + '/debug?port=' + serverConfig.ports.debug,
         app: 'Google Chrome'
       },
       dev : {
-        path: 'http://' + host + ':' + serverConfig.ports.client,
+        path: 'http://' + serverConfig.host + ':' + serverConfig.ports.client,
         app: 'Google Chrome'
       }
     },
@@ -73,16 +68,16 @@ module.exports = function(grunt) {
     }
   });
 
-  grunt.registerTask('sharejs-server', 'Start server', function() {
+  grunt.registerTask('sharejs-server', 'Start server', function () {
     var done = this.async();
     var port = serverConfig.ports.client;
 
-    grunt.log.writeln("Starting server on port "+port+"...");
+    grunt.log.writeln('Starting server on port ' + port + '...');
 
-    require('./server').listen(port).on('close', done);
+    require('./server').setup(serverConfig).listen(port).on('close', done);
   });
 
-  grunt.registerTask('default', ['concurrent:debug']);
-  grunt.registerTask('serve', ['env:dev', 'sharejs-server']);
+  //grgrunt.registerTask('default', ['concurrent:debug']);
+  grunt.registerTask('serve', ['sharejs-server']);
 
 };
