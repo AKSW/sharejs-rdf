@@ -1,7 +1,5 @@
 module.exports = (grunt) ->
-  grunt.loadNpmTasks 'grunt-contrib-coffee'
-  grunt.loadNpmTasks 'grunt-contrib-watch'
-  grunt.loadNpmTasks 'grunt-jasmine-node'
+  (require 'load-grunt-tasks') (grunt)
 
   grunt.initConfig(
     watch:
@@ -40,7 +38,15 @@ module.exports = (grunt) ->
         src: ['*.coffee']
         dest: 'spec/matchers'
         ext: '.js'
+    concat:
+      web:
+        src: ['lib/types/sharejs*.js']
+        dest: 'web/web.js'
+    uglify:
+      web:
+        files: { 'web/web.min.js': 'web/web.js' }
   )
 
   grunt.registerTask 'test', ['coffee', 'jasmine_node']
-  grunt.registerTask 'default', 'test'
+  grunt.registerTask 'web', ['coffee', 'concat:web', 'uglify:web']
+  grunt.registerTask 'default', ['test', 'web']
