@@ -9,6 +9,9 @@ module.exports = (grunt) ->
       coffeeSpec:
         files: ['src/spec/**/*.spec.coffee']
         tasks: ['coffee:spec']
+      coffeeWebSpec:
+        files: ['src/web-spec/**/*.spec.coffee']
+        tasks: ['coffee:webspec']
       coffeeMatches:
         files: ['src/spec/matchers/*.coffee']
         tasks: ['coffee:matchers']
@@ -32,6 +35,12 @@ module.exports = (grunt) ->
         src: ['**/*.spec.coffee']
         dest: 'spec'
         ext: '.spec.js'
+      webspec:
+        expand: true
+        cwd: 'src/web-spec'
+        src: ['**/*.spec.coffee']
+        dest: 'web/spec'
+        ext: '.spec.js'
       matchers:
         expand: true
         cwd: 'src/spec/matchers'
@@ -45,8 +54,16 @@ module.exports = (grunt) ->
     uglify:
       web:
         files: { 'web/web.min.js': 'web/web.js' }
+    jasmine:
+      webtest:
+        src: 'web/web.js'
+        options:
+          vendor: ['node_modules/share/webclient/share.js']
+          specs: 'web/spec/*.spec.js'
   )
 
   grunt.registerTask 'test', ['coffee', 'jasmine_node']
-  grunt.registerTask 'web', ['coffee', 'concat:web', 'uglify:web']
+  grunt.registerTask 'web-create', ['coffee', 'concat:web', 'uglify:web']
+  grunt.registerTask 'web-test', ['web-create', 'jasmine']
+  grunt.registerTask 'web', ['web-create', 'web-test']
   grunt.registerTask 'default', ['test', 'web']
