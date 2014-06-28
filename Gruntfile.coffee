@@ -62,8 +62,9 @@ module.exports = (grunt) ->
           specs: 'web/spec/*.spec.js'
   )
 
-  grunt.registerTask 'test', ['coffee', 'jasmine_node']
+  grunt.registerTask 'server-test', ['coffee', 'jasmine_node']
   grunt.registerTask 'web-create', ['coffee', 'concat:web', 'uglify:web']
   grunt.registerTask 'web-test', ['web-create', 'jasmine']
   grunt.registerTask 'web', ['web-create', 'web-test']
+  grunt.registerTask 'test', ['server-test', 'web-test']
   grunt.registerTask 'default', ['test', 'web']
