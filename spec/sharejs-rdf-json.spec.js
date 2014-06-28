@@ -17,6 +17,19 @@
     it('is named rdf-json', function() {
       return expect(rdfJson.name).toEqual('rdf-json');
     });
+    it('can be attached to sharejs', function() {
+      var rdfJsonIndex, sharejs, x;
+      sharejs = require('share');
+      rdfJsonIndex = require('..');
+      x = {
+        types: {}
+      };
+      rdfJsonIndex(x);
+      console.log(">> ", x);
+      rdfJsonIndex(sharejs);
+      expect(sharejs.types['rdf-json']).toBeDefined();
+      return expect(sharejs.types['rdf-json']).toEqual(rdfJson);
+    });
     describe('create method', function() {
       var doc;
       doc = rdfJson.create();

@@ -7,10 +7,20 @@ rdfJson = require '../lib/types/sharejs-rdf-json'
 RdfJsonDoc = rdfJson.Doc
 RdfJsonOperation = rdfJson.Operation
 
+
 describe 'sharejs-rdf-json', () ->
 
   it 'is named rdf-json', () ->
     expect(rdfJson.name).toEqual('rdf-json')
+
+  it 'can be attached to sharejs', () ->
+    sharejs = require 'share'
+    rdfJsonIndex = require '..'
+
+    rdfJsonIndex sharejs
+
+    expect(sharejs.types['rdf-json']).toBeDefined();
+    expect(sharejs.types['rdf-json']).toEqual(rdfJson);
 
 
   describe 'create method', () ->
