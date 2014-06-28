@@ -1,5 +1,5 @@
 (function() {
-  var RdfJsonDoc, RdfJsonOperation, SparkMD5, WEB, cloneExportTriples, cloneTriples, exportTriplesDifference, exportTriplesIntersect, hashTripleObject, jsonld, md5, rdfJson, sharejs;
+  var RdfJsonDoc, RdfJsonOperation, SparkMD5, WEB, cloneExportTriples, cloneTriples, exportTriplesDifference, exportTriplesIntersect, hashTripleObject, md5, rdfJson, sharejs;
 
   if (typeof window === 'object' && window.document) {
     WEB = true;
@@ -376,12 +376,10 @@
   };
 
   if (WEB != null) {
-    jsonld = window.jsonld;
     sharejs = window.sharejs;
     sharejs.types || (sharejs.types = {});
     sharejs.types['rdf-json'] = rdfJson;
   } else {
-    jsonld = require('jsonld');
     SparkMD5 = require('spark-md5');
     module.exports = rdfJson;
   }
