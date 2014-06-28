@@ -268,7 +268,7 @@ if WEB?
   jsonld = window.jsonld
   sharejs = window.sharejs
   sharejs.types ||= {}
-  sharejs.types.rdfJson = rdfJson
+  sharejs.types['rdf-json'] = rdfJson
 else
   jsonld = require 'jsonld'
   SparkMD5 = require 'spark-md5'
