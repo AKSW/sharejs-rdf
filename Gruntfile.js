@@ -51,12 +51,30 @@ module.exports = function (grunt) {
                 '!<%= config.app %>/scripts/vendor/*',
                 'test/spec/{,*/}*.js'
             ]
+        },
+
+        shell: {
+            'share-server': {
+                command: 'grunt serve',
+                options: {
+                    execOptions: {
+                        cwd: '../server'
+                    }
+                }
+            }
+        },
+
+        concurrent: {
+            serve: ['serve-app', 'shell:share-server'],
+            options: {
+                logConcurrentOutput: true
+            }
         }
 
     });
 
 
-    grunt.registerTask('serve', function () {
+    grunt.registerTask('serve-app', function () {
         delete config.harp.dist;
         grunt.task.run('harp');
     });
@@ -66,5 +84,5 @@ module.exports = function (grunt) {
         grunt.task.run('harp');
     });
 
-    grunt.registerTask('default', ['serve']);
+    grunt.registerTask('default', 'concurrent:serve');
 };
