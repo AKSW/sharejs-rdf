@@ -1,0 +1,10 @@
+pages = [ {title: "Home", url: "/"}, {title: "Turtle Editor", url: "/turtle-editor.html"}, {title: "JSON Editor", url: "/json-editor.html"} ]
+
+mixin nav_links(current_page)
+  each page in pages
+    if page.url == current_page
+      li.active
+        a(href=page.url)= page.title
+    else
+      li(data-page-url=page.url, data-current-page=current_page)
+        a(href=page.url)= page.title

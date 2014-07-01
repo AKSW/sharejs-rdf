@@ -1,4 +1,4 @@
-extends layout
+extends __layout
 
 block header
   +nav_links('/turtle-editor.html')
@@ -10,7 +10,7 @@ block content
   div(ng-controller='TurtleEditorController')
     .row.connect
       .col-lg-12
-        include jade-blocks/sharejs-config
+        include _jade-blocks/sharejs-config
 
     .row.editor
       .col-lg-12
