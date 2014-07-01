@@ -1,3 +1,5 @@
+'use strict';
+
 angular.module('app').controller('TurtleEditorController',
                                 ['$scope', 'AlertService', function($scope, AlertService) {
 

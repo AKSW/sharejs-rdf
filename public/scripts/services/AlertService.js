@@ -1,3 +1,5 @@
+'use strict';
+
 angular.module('app').factory('AlertService', [function() {
   var service = {
     /**
