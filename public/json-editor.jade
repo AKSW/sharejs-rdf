@@ -7,6 +7,9 @@ block content
   .page-header
     h1 sharejs-rdf - JSON Editor
 
-  .row
-    .col-lg-12
-      p
+  div(ng-controller='JsonEditorController')
+    .row.connect
+      .col-lg-12
+        include _jade-blocks/sharejs-config
+
+    rdf-json-editor

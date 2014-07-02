@@ -1,0 +1,23 @@
+div.rdf-json-editor.row
+  .col-lg-12
+    .row
+      .col-lg-8
+        h4 Triples
+      .col-lg-4.controls
+        a.glyphicon.glyphicon-plus(href="", title="Add triple", ng-click="addTriple('', '', {type: 'uri', value: ''})")
+
+  .col-lg-12
+    ul.triples
+      li(ng-repeat="triple in getTriples()", data-id="{{triple.id}}")
+        input.subject(type="text", title="Subject URI", ng-value="triple.s")
+        input.predicate(type="text", title="Predicate URI", ng-value="triple.p")
+        .object-input
+          select.type(ng-model="triple.o.type")
+            option(value="uri") URI
+            option(value="literal") Literal
+            option(value="bnode") Blank node
+          input.value(type="text", ng-model="triple.o.value")
+          input.lang(type="text", ng-model="lang", ng-if="triple.o.type == 'literal'")
+          input.data-type(type="text", ng-model="triple.o.dataType", ng-if="triple.o.type == 'literal'")
+
+        a.glyphicon.glyphicon-minus(href="", title="Remove triple", ng-click="removeTriple(triple.id)")
