@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('app').controller('TurtleEditorController',
-                                ['$scope', 'AlertService', function($scope, AlertService) {
+                                ['$scope', 'AlertService', function ($scope, AlertService) {
 
   var editor;
 
@@ -17,11 +17,11 @@ angular.module('app').controller('TurtleEditorController',
 
   // Methods:
 
-  $scope.codemirrorLoaded = function(_editor) {
+  $scope.codemirrorLoaded = function (_editor) {
     editor = _editor;
   };
 
-  $scope.connect = function() {
+  $scope.connect = function () {
     var serverUrl = $scope.serverUrl.split('#')[0];
     var docName = $scope.serverUrl.split('#')[1];
 
@@ -34,7 +34,7 @@ angular.module('app').controller('TurtleEditorController',
       origin: serverUrl
     };
 
-    sharejs.open(docName, 'text', options, function(error, doc) {
+    sharejs.open(docName, 'text', options, function (error, doc) {
       if (error) {
         return AlertService.danger(error);
       }
