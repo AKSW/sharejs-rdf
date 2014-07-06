@@ -1,0 +1,113 @@
+.rdf-json-editor {
+  margin-top: 20px;
+
+  .controls {
+    .add-triple {
+      vertical-align: bottom;
+    }
+  }
+
+  ul.triples {
+    list-style-type: none;
+    padding-left: 0;
+
+    li {
+      margin-bottom: 8px;
+
+      &.literal {
+        > .object, > .object-input {
+          margin-top: 5px;
+        }
+      }
+    }
+
+    li > form {
+      > *, > .object > *, .object-input > * {
+        margin-left: 5px;
+      }
+
+      > span.subject, > span.predicate, > .object {
+        display: inline-block;
+      }
+
+      > input, > select, > .object-input {
+        display: none;
+      }
+
+
+      > .subject, > .predicate, > .object > .text, > .object-input input {
+        width: 175px;
+        height: 1.5em;
+        vertical-align: top;
+
+        background: #f0f0f0;
+        border: 1px inset #ffffff;
+        color: #333;
+      }
+
+      > span.subject {
+        width: 196px;
+      }
+      > input.subject {
+        width: 217px;
+      }
+
+      > .subject {
+        margin-left: 0;
+      }
+
+      > .predicate {
+        margin-right: 5px;
+      }
+
+      > .object, > .object-input {
+        margin-left: 0;
+
+        .type {
+          display: inline-block;
+          margin-left: 0;
+          width: 1.5em;
+          background: #444;
+          color: white;
+          cursor: default;
+          text-align: center;
+        }
+
+        select.type {
+          width: 3em;
+        }
+
+        .text {
+          display: inline-block;
+        }
+
+        .value {
+          display: inline-block;
+          margin-left: 0;
+        }
+      }
+
+      > .object > .value {
+        border-left: none;
+      }
+
+      .edit-triple, .remove-triple {
+        vertical-align: middle;
+
+        &:hover {
+          text-decoration: none;
+        }
+      }
+    }
+
+    li.editing > form {
+      > span.subject, > span.predicate, > .object {
+        display: none;
+      }
+
+      > input, > select, > .object-input {
+        display: inline-block;
+      }
+    }
+  }
+}
