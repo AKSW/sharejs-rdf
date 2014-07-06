@@ -1,5 +1,7 @@
 
 mixin nav_links(current_page)
+  - if (!current_page) { current_page = '/' + current.path.join('/') + '.html' }
+
   each page in public._data.pages
     if page.url == current_page
       li.active
