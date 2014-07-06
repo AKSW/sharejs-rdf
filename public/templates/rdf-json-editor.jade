@@ -4,20 +4,35 @@ div.rdf-json-editor.row
       .col-lg-8
         h4 Triples
       .col-lg-4.controls
-        a.glyphicon.glyphicon-plus(href="", title="Add triple", ng-click="addTriple('', '', {type: 'uri', value: ''})")
+        a.add-triple.glyphicon.glyphicon-plus(href="", title="Add triple", ng-click="addTriple('', '', {type: 'uri', value: ''})")
 
   .col-lg-12
     ul.triples
-      li(ng-repeat="triple in getTriples()", data-id="{{triple.id}}")
-        input.subject(type="text", title="Subject URI", ng-value="triple.s")
-        input.predicate(type="text", title="Predicate URI", ng-value="triple.p")
-        .object-input
-          select.type(ng-model="triple.o.type")
-            option(value="uri") URI
-            option(value="literal") Literal
-            option(value="bnode") Blank node
-          input.value(type="text", ng-model="triple.o.value")
-          input.lang(type="text", ng-model="lang", ng-if="triple.o.type == 'literal'")
-          input.data-type(type="text", ng-model="triple.o.dataType", ng-if="triple.o.type == 'literal'")
+      li(ng-repeat="triple in getTriples()", data-id="{{triple.id}}", ng-class="{editing: editingTriple(triple.id), literal: (triple.o.type == 'literal')}")
+        form(ng-keypress="keyPress(triple, $event)")
+          span.subject(title="Subject URI", ng-dblclick="editSubject(triple)") {{ triple.s }}
+          input.subject(type="text", title="Subject URI", ng-model="triple.s", set-focus-on-event="subject")
 
-        a.glyphicon.glyphicon-minus(href="", title="Remove triple", ng-click="removeTriple(triple.id)")
+          span.predicate(title="Predicate URI", ng-dblclick="editPredicate(triple)") {{ triple.p }}
+          input.predicate(type="text", title="Predicate URI", ng-model="triple.p", set-focus-on-event="predicate")
+
+          span.object(ng-dblclick="editObject(triple)")
+            span.type
+              span(title="URI", ng-if="triple.o.type == 'uri'") U
+              span(title="Literal", ng-if="triple.o.type == 'literal'") L
+              span(title="Blank node", ng-if="triple.o.type == 'bnode'") _
+            span.text.value(title="Value") {{ triple.o.value }}
+            span.text.lang(title="Language", ng-if="triple.o.type == 'literal'") {{ triple.o.lang }}
+            span.text.data-type(title="Data type", ng-if="triple.o.type == 'literal'") {{ triple.o.dataType }}
+
+          .object-input
+            select.type(ng-model="triple.o.type")
+              option(value="uri", title="URI") U
+              option(value="literal", title="Literal") L
+              option(value="bnode", title="Blank node") _
+            input.value(type="text", title="Value", ng-model="triple.o.value", set-focus-on-event="object")
+            input.lang(type="text", ng-model="triple.o.lang", title="Language", ng-if="triple.o.type == 'literal'")
+            input.data-type(type="text", ng-model="triple.o.dataType", title="Data type", ng-if="triple.o.type == 'literal'")
+
+          a.edit-triple.glyphicon.glyphicon-edit(href="", title="Edit", ng-click="toggleTripleEdit(triple)")
+          a.remove-triple.glyphicon.glyphicon-minus(href="", title="Remove triple", ng-click="removeTriple(triple.id)")
