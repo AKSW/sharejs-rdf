@@ -31,4 +31,8 @@ angular.module('app').controller('JsonEditorController',
     });
   };
 
+  $scope.$on('rdf-json-operation', function (event, operation) {
+    console.log('rdf/json operation: ', operation);
+  });
+
 }]);

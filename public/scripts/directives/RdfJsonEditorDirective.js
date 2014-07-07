@@ -9,6 +9,10 @@
 angular.module('app').directive('rdfJsonEditor', function () {
   'use strict';
 
+  var TRIPLE_OP_ADD     = '+';
+  var TRIPLE_OP_REMOVE  = '-';
+  var TRIPLE_OP_EDIT    = 'e';
+
   return {
     replace: true,
     restrict: 'E',
@@ -17,8 +21,10 @@ angular.module('app').directive('rdfJsonEditor', function () {
     controller: ['$scope', function ($scope) {
       var nextTripleId = 1;
 
-      $scope.editingTriples = {};
       $scope.triples = [];
+      $scope.editingTriples = {};
+      $scope.tripleJustAdded = {};
+      $scope.triplePrevious = {};
 
       $scope.setTriplesByRdfJson = function (rdfJson) {
         $scope.triples = rdfJson2Triples(rdfJson);
@@ -33,55 +39,74 @@ angular.module('app').directive('rdfJsonEditor', function () {
       };
 
       $scope.addTriple = function (s, p, o) {
+        var tripleId = nextTripleId++;
+
+        finishEditingOfAllTriples();
+
         $scope.triples.push({
-          id: nextTripleId++,
+          id: tripleId,
           s: s,
           p: p,
           o: o
         });
+
+        $scope.editingTriples[tripleId] = true;
+        $scope.tripleJustAdded[tripleId] = true;
       };
 
       $scope.removeTriple = function (tripleId) {
         if (window.confirm('Are you sure you want to delete this triple?')) {
+          if ($scope.editingTriples[tripleId]) {
+            $scope.finishEditing(tripleId);
+          }
+
           $scope.triples = removeTriple($scope.triples, tripleId);
         }
       };
 
-      $scope.editingTriple = function (tripleId) {
-        return $scope.editingTriples[tripleId] === true;
+      $scope.editingTriple = function (triple) {
+        return $scope.editingTriples[triple.id] === true;
       };
 
-      $scope.finishEditing = function (triple) {
-        $scope.editingTriples[triple.id] = false;
-        tripleChanged(triple.id);
+      $scope.finishEditing = function (tripleId) {
+        $scope.editingTriples[tripleId] = false;
+
+        if ($scope.tripleJustAdded[tripleId]) {
+          tripleAdded(tripleId);
+          $scope.tripleJustAdded[tripleId] = false;
+        } else {
+          tripleChanged(tripleId);
+        }
       };
       $scope.keyPress = function (triple, event) {
         if (event.keyCode === 13) {
-          $scope.finishEditing(triple);
+          $scope.finishEditing(triple.id);
         }
       };
 
       $scope.toggleTripleEdit = function (triple) {
         $scope.editingTriples[triple.id] = $scope.editingTriples[triple.id] !== true;
 
-        if (!$scope.editingTriples[triple.id]) {
-          tripleChanged(triple.id);
+        if ($scope.editingTriples[triple.id]) {
+          startTripleEditing(triple);
+        } else {
+          $scope.finishEditing(triple.id);
         }
       };
 
 
       $scope.editSubject = function (triple) {
-        $scope.editingTriples[triple.id] = true;
+        startTripleEditing(triple);
         $scope.$broadcast('setFocus', 'subject');
       };
 
       $scope.editPredicate = function (triple) {
-        $scope.editingTriples[triple.id] = true;
+        startTripleEditing(triple);
         $scope.$broadcast('setFocus', 'predicate');
       };
 
       $scope.editObject = function (triple) {
-        $scope.editingTriples[triple.id] = true;
+        startTripleEditing(triple);
         $scope.$broadcast('setFocus', 'object');
       };
 
@@ -89,12 +114,48 @@ angular.module('app').directive('rdfJsonEditor', function () {
       ////////////////////
       // Tool functions:
 
+      var tripleById = function (tripleId) {
+        for (var i = 0; i < $scope.triples.length; i++) {
+          var triple = $scope.triples[i];
+
+          if (triple.id === tripleId) {
+            return triple;
+          }
+        }
+
+        throw new Error('Triple not found: ' + tripleId);
+      };
+
+      var cloneTriple = function (triple) {
+        var clone = {};
+
+        clone.id = triple.id;
+        clone.s = triple.s;
+        clone.p = triple.p;
+        clone.o = {
+          type: triple.o.type,
+          value: triple.o.value
+        };
+
+        if (triple.o.lang) {
+          clone.o.lang = triple.o.lang;
+        }
+        if (triple.o.dataType) {
+          clone.o.dataType = triple.o.dataType;
+        }
+
+        return clone;
+      };
+
       var removeTriple = function (triples, tripleId) {
+        var triple;
+
         for (var i = 0; i < triples.length; i++) {
-          var triple = triples[i];
+          triple = triples[i];
 
           if (triple.id === tripleId) {
             triples = triples.slice(0, i).concat( triples.slice(i+1) );
+            tripleRemoved(triple);
             break;
           }
         }
@@ -102,14 +163,39 @@ angular.module('app').directive('rdfJsonEditor', function () {
         return triples;
       };
 
-      var tripleChanged = function (tripleId) {
-        // Just logging for now:
+      var startTripleEditing = function (triple) {
+        $scope.editingTriples[triple.id] = true;
+        $scope.triplePrevious[triple.id] = cloneTriple(triple);
+      };
 
-        var triple;
-        for (var i = 0; i < $scope.triples.length; i++) {
-          triple = $scope.triples[i];
+      var finishEditingOfAllTriples = function () {
+        for (var tripleId in $scope.editingTriples) {
+          if ($scope.editingTriples[tripleId]) {
+            $scope.finishEditing( parseInt(tripleId) );
+          }
         }
-        console.log('Triple changed: ' + tripleId + ': ', triple);
+      };
+
+      var tripleAdded = function (tripleId) {
+        $scope.$emit('rdf-json-operation', {
+          op: TRIPLE_OP_ADD,
+          triple: tripleById(tripleId)
+        });
+      };
+
+      var tripleChanged = function (tripleId) {
+        $scope.$emit('rdf-json-operation', {
+          op: TRIPLE_OP_EDIT,
+          triple: tripleById(tripleId),
+          previous: $scope.triplePrevious[tripleId]
+        });
+      };
+
+      var tripleRemoved = function (triple) {
+        $scope.$emit('rdf-json-operation', {
+          op: TRIPLE_OP_REMOVE,
+          triple: triple
+        });
       };
 
 

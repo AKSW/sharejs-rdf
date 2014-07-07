@@ -8,7 +8,7 @@ div.rdf-json-editor.row
 
   .col-lg-12
     ul.triples
-      li(ng-repeat="triple in getTriples()", data-id="{{triple.id}}", ng-class="{editing: editingTriple(triple.id), literal: (triple.o.type == 'literal')}")
+      li(ng-repeat="triple in getTriples()", data-id="{{triple.id}}", ng-class="{editing: editingTriple(triple), literal: (triple.o.type == 'literal')}")
         form(ng-keypress="keyPress(triple, $event)")
           span.subject(title="Subject URI", ng-dblclick="editSubject(triple)") {{ triple.s }}
           input.subject(type="text", title="Subject URI", ng-model="triple.s", set-focus-on-event="subject")
@@ -20,7 +20,7 @@ div.rdf-json-editor.row
             span.type
               span(title="URI", ng-if="triple.o.type == 'uri'") U
               span(title="Literal", ng-if="triple.o.type == 'literal'") L
-              span(title="Blank node", ng-if="triple.o.type == 'bnode'") _
+              span(title="Blank node", ng-if="triple.o.type == 'bnode'") _:
             span.text.value(title="Value") {{ triple.o.value }}
             span.text.lang(title="Language", ng-if="triple.o.type == 'literal'") {{ triple.o.lang }}
             span.text.data-type(title="Data type", ng-if="triple.o.type == 'literal'") {{ triple.o.dataType }}
@@ -29,7 +29,7 @@ div.rdf-json-editor.row
             select.type(ng-model="triple.o.type")
               option(value="uri", title="URI") U
               option(value="literal", title="Literal") L
-              option(value="bnode", title="Blank node") _
+              option(value="bnode", title="Blank node") _:
             input.value(type="text", title="Value", ng-model="triple.o.value", set-focus-on-event="object")
             input.lang(type="text", ng-model="triple.o.lang", title="Language", ng-if="triple.o.type == 'literal'")
             input.data-type(type="text", ng-model="triple.o.dataType", title="Data type", ng-if="triple.o.type == 'literal'")
