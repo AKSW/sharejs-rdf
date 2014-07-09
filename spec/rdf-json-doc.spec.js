@@ -5,7 +5,7 @@
 
   require('./matchers/triples');
 
-  rdfJson = require('../lib/types/sharejs-rdf-json');
+  rdfJson = require('../lib/types/rdf-json');
 
   RdfJsonDoc = rdfJson.Doc;
 

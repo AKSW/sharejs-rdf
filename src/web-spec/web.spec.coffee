@@ -1,5 +1,5 @@
 
-describe 'rdf/json web client script', () ->
+describe 'rdf/json web client script', ->
 
   sharejs = window.sharejs
   rdfJson = sharejs.types['rdf-json']
@@ -15,10 +15,10 @@ describe 'rdf/json web client script', () ->
     }
 
 
-  it 'is attached to share-js', () ->
+  it 'is attached to share-js', ->
     expect( rdfJson ).toBeObject()
 
-  it 'has the necessary properties', () ->
+  it 'has the necessary properties', ->
     expect( rdfJson.Doc ).toBeFunction()
     expect( rdfJson.Operation ).toBeFunction()
     expect( rdfJson.name ).toEqual 'rdf-json'

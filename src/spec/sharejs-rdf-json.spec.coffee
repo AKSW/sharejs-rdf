@@ -2,7 +2,7 @@ require 'jasmine-expect'
 require './matchers/triples'
 
 jsonld = require 'jsonld'
-rdfJson = require '../lib/types/sharejs-rdf-json'
+rdfJson = require '../lib/types/rdf-json'
 
 RdfJsonDoc = rdfJson.Doc
 RdfJsonOperation = rdfJson.Operation

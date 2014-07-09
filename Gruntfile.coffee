@@ -51,7 +51,7 @@ module.exports = (grunt) ->
         ext: '.js'
     concat:
       web:
-        src: ['lib/web-prelude.js', 'lib/types/sharejs-rdf-json.js']
+        src: ['lib/web-prelude.js', 'lib/types/rdf-json.js', 'lib/types/rdf-json-api.js']
         dest: 'web/web.js'
     uglify:
       web:
