@@ -151,7 +151,7 @@ class RdfJsonDoc
           objectHash = hashTripleObject object
           @_triples[subjectUri][predicateUri][objectHash] = object
 
-  remove: (triples) ->
+  delete: (triples) ->
     for subjectUri, predicates of triples
       @assertSubjectIsUri(subjectUri)
       continue if !@_triples[subjectUri]
@@ -195,13 +195,13 @@ class RdfJsonDoc
 
 class RdfJsonOperation
   OP_INSERT: 'insert'
-  OP_REMOVE: 'remove'
+  OP_DELETE: 'delete'
 
   @insert: (triplesToAdd) ->
     new RdfJsonOperation(RdfJsonOperation::OP_INSERT, triplesToAdd)
 
-  @remove: (triplesToRemove) ->
-    new RdfJsonOperation(RdfJsonOperation::OP_REMOVE, triplesToRemove)
+  @delete: (triplesToRemove) ->
+    new RdfJsonOperation(RdfJsonOperation::OP_DELETE, triplesToRemove)
 
   # triples in export format
   constructor: (operation, triples) ->
@@ -232,8 +232,8 @@ rdfJson =
     switch op.operation()
       when RdfJsonOperation::OP_INSERT
         newSnapshot.insert op.getTriples()
-      when RdfJsonOperation::OP_REMOVE
-        newSnapshot.remove op.getTriples()
+      when RdfJsonOperation::OP_DELETE
+        newSnapshot.delete op.getTriples()
 
     return newSnapshot
 

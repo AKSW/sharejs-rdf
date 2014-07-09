@@ -16,7 +16,7 @@ describe 'RdfJsonOperation', () ->
 
   it 'possesses operation type constants', () ->
     expect(RdfJsonOperation::OP_INSERT).toEqual 'insert'
-    expect(RdfJsonOperation::OP_REMOVE).toEqual 'remove'
+    expect(RdfJsonOperation::OP_DELETE).toEqual 'delete'
 
   it 'has working constructor & getters', () ->
     op = new RdfJsonOperation(RdfJsonOperation::OP_INSERT, testTriples)
@@ -46,8 +46,8 @@ describe 'RdfJsonOperation', () ->
       expect(op.operation()).toEqual RdfJsonOperation::OP_INSERT
       expect(op.getTriples()).triplesToEqual testTriples
 
-    it 'remove', () ->
-      op = RdfJsonOperation.remove(testTriples)
+    it 'delete', () ->
+      op = RdfJsonOperation.delete(testTriples)
 
-      expect(op.operation()).toEqual RdfJsonOperation::OP_REMOVE
+      expect(op.operation()).toEqual RdfJsonOperation::OP_DELETE
       expect(op.getTriples()).triplesToEqual testTriples

@@ -72,7 +72,7 @@
     it('can delete', function() {
       var doc;
       doc = new RdfJsonDoc(testTriples);
-      doc.remove(testTriples);
+      doc["delete"](testTriples);
       return expect(doc.exportTriples()).triplesToEqual({});
     });
     it('insertion of duplicates causes no change', function() {
@@ -93,13 +93,13 @@
     it('removal of empty triple set causes no change', function() {
       var doc;
       doc = new RdfJsonDoc(testTriples);
-      doc.remove({});
+      doc["delete"]({});
       return expect(doc.exportTriples()).triplesToEqual(testTriples);
     });
     it('removal of non-existing triple set causes no change', function() {
       var doc;
       doc = new RdfJsonDoc(testTriples);
-      doc.remove({
+      doc["delete"]({
         'http://example.com/persons/andy': {
           'http://example.com/ontology#age': [
             {
@@ -406,11 +406,11 @@
       return expect(doc.exportTriples()).triplesToEqual(afterTriples4ShouldBe);
     });
     it('can delete two of three triples of the same subject and predicate', function() {
-      doc.remove(deletion1);
+      doc["delete"](deletion1);
       return expect(doc.exportTriples()).triplesToEqual(afterDeletion1ShouldBe);
     });
     return it('can delete the only triple of this subject', function() {
-      doc.remove(deletion2);
+      doc["delete"](deletion2);
       return expect(doc.exportTriples()).triplesToEqual(afterDeletion2ShouldBe);
     });
   });

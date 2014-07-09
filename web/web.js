@@ -220,7 +220,7 @@
       return _results;
     };
 
-    RdfJsonDoc.prototype.remove = function(triples) {
+    RdfJsonDoc.prototype["delete"] = function(triples) {
       var objectCount, objectToRemove, objectToRemoveHash, objects, predicateCount, predicateUri, predicates, presentObject, presentObjectHash, presentObjects, subjectUri, _i, _len, _results;
       _results = [];
       for (subjectUri in triples) {
@@ -294,14 +294,14 @@
   RdfJsonOperation = (function() {
     RdfJsonOperation.prototype.OP_INSERT = 'insert';
 
-    RdfJsonOperation.prototype.OP_REMOVE = 'remove';
+    RdfJsonOperation.prototype.OP_DELETE = 'delete';
 
     RdfJsonOperation.insert = function(triplesToAdd) {
       return new RdfJsonOperation(RdfJsonOperation.prototype.OP_INSERT, triplesToAdd);
     };
 
-    RdfJsonOperation.remove = function(triplesToRemove) {
-      return new RdfJsonOperation(RdfJsonOperation.prototype.OP_REMOVE, triplesToRemove);
+    RdfJsonOperation["delete"] = function(triplesToRemove) {
+      return new RdfJsonOperation(RdfJsonOperation.prototype.OP_DELETE, triplesToRemove);
     };
 
     function RdfJsonOperation(operation, triples) {
@@ -347,8 +347,8 @@
         case RdfJsonOperation.prototype.OP_INSERT:
           newSnapshot.insert(op.getTriples());
           break;
-        case RdfJsonOperation.prototype.OP_REMOVE:
-          newSnapshot.remove(op.getTriples());
+        case RdfJsonOperation.prototype.OP_DELETE:
+          newSnapshot["delete"](op.getTriples());
       }
       return newSnapshot;
     },

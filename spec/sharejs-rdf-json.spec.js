@@ -134,7 +134,7 @@
       return it('does deletion', function() {
         var newSnapshot, op, snapshot;
         snapshot = new RdfJsonDoc(testTriples);
-        op = RdfJsonOperation.remove(testDeletionTriples);
+        op = RdfJsonOperation["delete"](testDeletionTriples);
         newSnapshot = rdfJson.apply(snapshot, op);
         return expect(newSnapshot.exportTriples()).triplesToEqual(afterDeletionShouldBe);
       });
@@ -263,9 +263,9 @@
         };
         testCases = [
           {
-            label: 'transforms op1:<insert new>, op2:<remove one of new ones>',
+            label: 'transforms op1:<insert new>, op2:<delete one of new ones>',
             op1: RdfJsonOperation.insert(insertion1),
-            op2: RdfJsonOperation.remove(removal1),
+            op2: RdfJsonOperation["delete"](removal1),
             doc: testTriples,
             should_be: {
               'http://example.com/persons/john': {
@@ -289,9 +289,9 @@
               }
             }
           }, {
-            label: 'transforms op1:<insert already existing>, op2:<remove this triples>',
+            label: 'transforms op1:<insert already existing>, op2:<delete this triples>',
             op1: RdfJsonOperation.insert(insertionRemoval2),
-            op2: RdfJsonOperation.remove(insertionRemoval2),
+            op2: RdfJsonOperation["delete"](insertionRemoval2),
             doc: testTriples,
             should_be: {
               'http://example.com/persons/john': {
@@ -307,8 +307,8 @@
               }
             }
           }, {
-            label: 'transforms op1:<remove triple>, op2:<insert this triple again>',
-            op1: RdfJsonOperation.remove(insertionRemoval2),
+            label: 'transforms op1:<delete triple>, op2:<insert this triple again>',
+            op1: RdfJsonOperation["delete"](insertionRemoval2),
             op2: RdfJsonOperation.insert(insertionRemoval2),
             doc: testTriples,
             should_be: {
@@ -330,8 +330,8 @@
               }
             }
           }, {
-            label: 'transforms op1:<remove not-yet-existing>, op2:<insert this triple>',
-            op1: RdfJsonOperation.remove(insertionRemoval3),
+            label: 'transforms op1:<delete not-yet-existing>, op2:<insert this triple>',
+            op1: RdfJsonOperation["delete"](insertionRemoval3),
             op2: RdfJsonOperation.insert(insertionRemoval3),
             doc: testTriples,
             should_be: {

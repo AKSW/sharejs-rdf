@@ -23,7 +23,7 @@
     };
     it('possesses operation type constants', function() {
       expect(RdfJsonOperation.prototype.OP_INSERT).toEqual('insert');
-      return expect(RdfJsonOperation.prototype.OP_REMOVE).toEqual('remove');
+      return expect(RdfJsonOperation.prototype.OP_DELETE).toEqual('delete');
     });
     it('has working constructor & getters', function() {
       var op;
@@ -51,10 +51,10 @@
         expect(op.operation()).toEqual(RdfJsonOperation.prototype.OP_INSERT);
         return expect(op.getTriples()).triplesToEqual(testTriples);
       });
-      return it('remove', function() {
+      return it('delete', function() {
         var op;
-        op = RdfJsonOperation.remove(testTriples);
-        expect(op.operation()).toEqual(RdfJsonOperation.prototype.OP_REMOVE);
+        op = RdfJsonOperation["delete"](testTriples);
+        expect(op.operation()).toEqual(RdfJsonOperation.prototype.OP_DELETE);
         return expect(op.getTriples()).triplesToEqual(testTriples);
       });
     });

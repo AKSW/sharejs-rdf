@@ -45,7 +45,7 @@ describe 'RdfJsonDoc', () ->
 
   it 'can delete', () ->
     doc = new RdfJsonDoc(testTriples)
-    doc.remove testTriples
+    doc.delete testTriples
     expect(doc.exportTriples()).triplesToEqual {}
 
   it 'insertion of duplicates causes no change', () ->
@@ -59,12 +59,12 @@ describe 'RdfJsonDoc', () ->
 
   it 'removal of empty triple set causes no change', () ->
     doc = new RdfJsonDoc(testTriples)
-    doc.remove {}
+    doc.delete {}
     expect(doc.exportTriples()).triplesToEqual testTriples
 
   it 'removal of non-existing triple set causes no change', () ->
     doc = new RdfJsonDoc(testTriples)
-    doc.remove(
+    doc.delete(
       'http://example.com/persons/andy':
         'http://example.com/ontology#age':
           [ { type: 'literal', value: '20', datatype: 'http://www.w3.org/2001/XMLSchema#integer' } ]
@@ -217,9 +217,9 @@ describe 'RDFJsonDoc (more complex insertion/deletion)', () ->
     expect(doc.exportTriples()).triplesToEqual afterTriples4ShouldBe
 
   it 'can delete two of three triples of the same subject and predicate', () ->
-    doc.remove deletion1
+    doc.delete deletion1
     expect(doc.exportTriples()).triplesToEqual afterDeletion1ShouldBe
 
   it 'can delete the only triple of this subject', () ->
-    doc.remove deletion2
+    doc.delete deletion2
     expect(doc.exportTriples()).triplesToEqual afterDeletion2ShouldBe
