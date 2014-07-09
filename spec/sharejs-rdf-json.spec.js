@@ -307,6 +307,29 @@
               }
             }
           }, {
+            label: 'transforms op1:<remove triple>, op2:<insert this triple again>',
+            op1: RdfJsonOperation.remove(insertionRemoval2),
+            op2: RdfJsonOperation.insert(insertionRemoval2),
+            doc: testTriples,
+            should_be: {
+              'http://example.com/persons/john': {
+                'http://example.com/ontology#name': [
+                  {
+                    type: 'literal',
+                    value: 'John Smith'
+                  }
+                ]
+              },
+              'http://example.com/persons/andy': {
+                'http://example.com/ontology#name': [
+                  {
+                    type: 'literal',
+                    value: 'Andy Smith'
+                  }
+                ]
+              }
+            }
+          }, {
             label: 'transforms op1:<remove not-yet-existing>, op2:<insert this triple>',
             op1: RdfJsonOperation.remove(insertionRemoval3),
             op2: RdfJsonOperation.insert(insertionRemoval3),
