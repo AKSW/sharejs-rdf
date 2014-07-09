@@ -205,11 +205,13 @@ class RdfJsonOperation
 
   # triples in export format
   constructor: (operation, triples) ->
-    @operation = () -> operation
+    @_operation = operation
     @_triples = triples
 
   clone: () ->
     new RdfJsonOperation(@operation(), cloneExportTriples(@getTriples()))
+
+  operation: () -> @_operation
 
   getTriples: () -> @_triples
 

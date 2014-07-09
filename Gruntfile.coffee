@@ -24,6 +24,8 @@ module.exports = (grunt) ->
       all: ['spec/']
     coffee:
       lib:
+        options:
+          bare: true
         expand: true,
         cwd: 'src/lib'
         src: ['**/*.coffee']
@@ -49,7 +51,7 @@ module.exports = (grunt) ->
         ext: '.js'
     concat:
       web:
-        src: ['lib/types/sharejs*.js']
+        src: ['lib/web-prelude.js', 'lib/types/sharejs-rdf-json.js']
         dest: 'web/web.js'
     uglify:
       web:
