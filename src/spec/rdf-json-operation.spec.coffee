@@ -6,7 +6,7 @@ rdfJson = require '../lib/types/sharejs-rdf-json'
 RdfJsonOperation = rdfJson.Operation
 
 
-describe 'RdfJsonOperation', () ->
+describe 'RdfJsonOperation', ->
 
   testTriples =
     'http://example.com/persons/john':
@@ -14,23 +14,23 @@ describe 'RdfJsonOperation', () ->
         [ { type: 'literal', value: 'John Smith' } ]
 
 
-  it 'possesses operation type constants', () ->
+  it 'possesses operation type constants', ->
     expect(RdfJsonOperation::OP_INSERT).toEqual 'insert'
     expect(RdfJsonOperation::OP_DELETE).toEqual 'delete'
 
-  it 'has working constructor & getters', () ->
+  it 'has working constructor & getters', ->
     op = new RdfJsonOperation(RdfJsonOperation::OP_INSERT, testTriples)
 
     expect(op.operation()).toEqual RdfJsonOperation::OP_INSERT
     expect(op.getTriples()).triplesToEqual testTriples
 
-  it 'can set triples', () ->
+  it 'can set triples', ->
     op = new RdfJsonOperation(RdfJsonOperation::OP_INSERT, {})
 
     op.setTriples testTriples
     expect(op.getTriples()).triplesToEqual testTriples
 
-  it 'can clone', () ->
+  it 'can clone', ->
     op = new RdfJsonOperation(RdfJsonOperation::OP_INSERT, testTriples)
     clone = op.clone()
 
@@ -38,15 +38,15 @@ describe 'RdfJsonOperation', () ->
     expect(clone.getTriples()).triplesToEqual op.getTriples()
 
 
-  describe 'has working factory methods:', () ->
+  describe 'has working factory methods:', ->
 
-    it 'insert', () ->
+    it 'insert', ->
       op = RdfJsonOperation.insert(testTriples)
 
       expect(op.operation()).toEqual RdfJsonOperation::OP_INSERT
       expect(op.getTriples()).triplesToEqual testTriples
 
-    it 'delete', () ->
+    it 'delete', ->
       op = RdfJsonOperation.delete(testTriples)
 
       expect(op.operation()).toEqual RdfJsonOperation::OP_DELETE

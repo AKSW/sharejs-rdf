@@ -8,12 +8,12 @@ RdfJsonDoc = rdfJson.Doc
 RdfJsonOperation = rdfJson.Operation
 
 
-describe 'sharejs-rdf-json', () ->
+describe 'sharejs-rdf-json', ->
 
-  it 'is named rdf-json', () ->
+  it 'is named rdf-json', ->
     expect(rdfJson.name).toEqual('rdf-json')
 
-  it 'can be attached to sharejs', () ->
+  it 'can be attached to sharejs', ->
     sharejs = require 'share'
     rdfJsonIndex = require '..'
 
@@ -23,14 +23,14 @@ describe 'sharejs-rdf-json', () ->
     expect(sharejs.types['rdf-json']).toEqual(rdfJson);
 
 
-  describe 'create method', () ->
+  describe 'create method', ->
     doc = rdfJson.create()
 
-    it 'returns RdfJsonDoc instance', () ->
+    it 'returns RdfJsonDoc instance', ->
       expect(doc).toBeObject()
       expect(doc instanceof RdfJsonDoc).toBeTruthy();
 
-    it 'returns empty, but parsable set of triples', () ->
+    it 'returns empty, but parsable set of triples', ->
       done = false
       triples = doc.exportTriples()
 
@@ -43,7 +43,7 @@ describe 'sharejs-rdf-json', () ->
         done
 
 
-  describe 'apply method', () ->
+  describe 'apply method', ->
     testTriples =
       'http://example.com/persons/john':
         'http://example.com/ontology#name':
@@ -80,14 +80,14 @@ describe 'sharejs-rdf-json', () ->
           [ { type: 'literal', value: 'Andy Smith' } ]
 
 
-    it 'does insertion', () ->
+    it 'does insertion', ->
       snapshot = new RdfJsonDoc(testTriples)
       op = RdfJsonOperation.insert testInsertionTriples
 
       newSnapshot = rdfJson.apply(snapshot, op)
       expect(newSnapshot.exportTriples()).triplesToEqual afterInsertionShouldBe
 
-    it 'does deletion', () ->
+    it 'does deletion', ->
       snapshot = new RdfJsonDoc(testTriples)
       op = RdfJsonOperation.delete testDeletionTriples
 
@@ -95,9 +95,9 @@ describe 'sharejs-rdf-json', () ->
       expect(newSnapshot.exportTriples()).triplesToEqual afterDeletionShouldBe
 
 
-  describe 'transform method', () ->
+  describe 'transform method', ->
 
-    describe 'basic testing:', () ->
+    describe 'basic testing:', ->
 
       op1 = RdfJsonOperation.insert(
         'http://example.com/persons/john':
@@ -118,18 +118,18 @@ describe 'sharejs-rdf-json', () ->
       spyOn(op2, 'clone');
 
       op1_transformed = rdfJson.transform(op1, op2, 'left')
-      it 'clones op1', () ->
+      it 'clones op1', ->
         expect(op1.clone).toHaveBeenCalled
 
       op2_transformed = rdfJson.transform(op2, op1, 'right')
-      it 'clones op2', () ->
+      it 'clones op2', ->
         expect(op2.clone).toHaveBeenCalled
 
-      it 'does not modify the input operations', () ->
+      it 'does not modify the input operations', ->
         expect(op1.getTriples()).triplesToEqual op1Clone.getTriples()
         expect(op2.getTriples()).triplesToEqual op2Clone.getTriples()
 
-      it 'throws error on bad side parameter', () ->
+      it 'throws error on bad side parameter', ->
         side = 'foobar'
 
         expect( () ->
@@ -140,7 +140,7 @@ describe 'sharejs-rdf-json', () ->
     # check if snapshot(apply(op1); apply(transform(op2, op1, 'right')))
     #          ==
     #          snapshot(apply(op2); apply(transform(op1, op2, 'left')))
-    describe 'functional testing:', () ->
+    describe 'functional testing:', ->
 
       runTest = (op1, op2, doc, should_be) ->
         op1_transformed = rdfJson.transform(op1, op2, 'left')
@@ -259,5 +259,5 @@ describe 'sharejs-rdf-json', () ->
       ]
 
       for testCase in testCases
-        it testCase.label, () ->
+        it testCase.label, ->
           runTest testCase.op1, testCase.op2, testCase.doc, testCase.should_be

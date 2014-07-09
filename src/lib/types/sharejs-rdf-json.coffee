@@ -116,7 +116,7 @@ class RdfJsonDoc
     @_triples = {}
     @insert triples
 
-  exportTriples: () ->
+  exportTriples: ->
     _export = {}
 
     for subjectUri, predicates of @_triples
@@ -134,7 +134,7 @@ class RdfJsonDoc
 
     return _export
 
-  clone: () ->
+  clone: ->
     doc = new RdfJsonDoc
     doc._triples = cloneTriples(@_triples)
     return doc
@@ -208,12 +208,12 @@ class RdfJsonOperation
     @_operation = operation
     @_triples = triples
 
-  clone: () ->
+  clone: ->
     new RdfJsonOperation(@operation(), cloneExportTriples(@getTriples()))
 
-  operation: () -> @_operation
+  operation: -> @_operation
 
-  getTriples: () -> @_triples
+  getTriples: -> @_triples
 
   setTriples: (triples) -> @_triples = triples
 
@@ -224,7 +224,7 @@ rdfJson =
   Operation: RdfJsonOperation
   name: 'rdf-json'
 
-  create: () -> new RdfJsonDoc
+  create: -> new RdfJsonDoc
 
   apply: (snapshot, op) ->
     throw new Error("Snapshot must be a RdfJsonDoc instance. Given: #{snapshot}") unless snapshot instanceof RdfJsonDoc
