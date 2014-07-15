@@ -7,7 +7,7 @@ angular.module('app').controller('TurtleEditorController',
 
   // Properties:
 
-  $scope.serverUrl = 'http://localhost:4000/channel#test';
+  $scope.serverUrl = 'http://' + document.location.hostname + ':4000/channel#test';
   $scope.turtleContents = '';
 
   $scope.editorOptions = {
