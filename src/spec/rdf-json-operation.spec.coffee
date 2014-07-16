@@ -13,29 +13,32 @@ describe 'RdfJsonOperation', ->
       'http://example.com/ontology#name':
         [ { type: 'literal', value: 'John Smith' } ]
 
+  testTriples2 =
+    'http://example.com/persons/andy':
+      'http://example.com/ontology#age':
+        [ { type: 'literal', value: '25' } ]
 
-  it 'possesses operation type constants', ->
-    expect(RdfJsonOperation::OP_INSERT).toEqual 'insert'
-    expect(RdfJsonOperation::OP_DELETE).toEqual 'delete'
 
   it 'has working constructor & getters', ->
-    op = new RdfJsonOperation(RdfJsonOperation::OP_INSERT, testTriples)
+    op = new RdfJsonOperation(testTriples, testTriples2)
 
-    expect(op.operation()).toEqual RdfJsonOperation::OP_INSERT
-    expect(op.getTriples()).triplesToEqual testTriples
+    expect(op.getTriplesToAdd()).triplesToEqual testTriples
+    expect(op.getTriplesToDel()).triplesToEqual testTriples2
 
   it 'can set triples', ->
-    op = new RdfJsonOperation(RdfJsonOperation::OP_INSERT, {})
+    op = new RdfJsonOperation({}, {})
 
-    op.setTriples testTriples
-    expect(op.getTriples()).triplesToEqual testTriples
+    op.setTriplesToAdd testTriples
+    op.setTriplesToDel testTriples2
+    expect(op.getTriplesToAdd()).triplesToEqual testTriples
+    expect(op.getTriplesToDel()).triplesToEqual testTriples2
 
   it 'can clone', ->
-    op = new RdfJsonOperation(RdfJsonOperation::OP_INSERT, testTriples)
+    op = new RdfJsonOperation(testTriples, testTriples2)
     clone = op.clone()
 
-    expect(clone.operation()).toEqual op.operation()
-    expect(clone.getTriples()).triplesToEqual op.getTriples()
+    expect(clone.getTriplesToAdd()).triplesToEqual testTriples
+    expect(clone.getTriplesToDel()).triplesToEqual testTriples2
 
 
   describe 'has working factory methods:', ->
@@ -43,11 +46,11 @@ describe 'RdfJsonOperation', ->
     it 'insert', ->
       op = RdfJsonOperation.insert(testTriples)
 
-      expect(op.operation()).toEqual RdfJsonOperation::OP_INSERT
-      expect(op.getTriples()).triplesToEqual testTriples
+      expect(op.getTriplesToAdd()).triplesToEqual testTriples
+      expect(op.getTriplesToDel()).triplesToEqual {}
 
     it 'delete', ->
       op = RdfJsonOperation.delete(testTriples)
 
-      expect(op.operation()).toEqual RdfJsonOperation::OP_DELETE
-      expect(op.getTriples()).triplesToEqual testTriples
+      expect(op.getTriplesToAdd()).triplesToEqual {}
+      expect(op.getTriplesToDel()).triplesToEqual testTriples

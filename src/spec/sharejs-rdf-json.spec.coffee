@@ -95,6 +95,54 @@ describe 'sharejs-rdf-json', ->
       expect(newSnapshot.exportTriples()).triplesToEqual afterDeletionShouldBe
 
 
+  describe 'compose method', ->
+
+    it 'works', ->
+
+      op1 = new RdfJsonOperation({
+        'http://example.com/persons/john':
+          'http://example.com/ontology#name':
+            [ { type: 'literal', value: 'John Richard Smith' } ]
+          'http://example.com/ontology#age':
+            [ { type: 'literal', value: '36' } ]
+      },{
+        'http://example.com/persons/andy':
+          'http://example.com/ontology#name':
+            [ { type: 'literal', value: 'Andy Smith' } ]
+      })
+
+      op2 = new RdfJsonOperation({
+        'http://example.com/persons/andy':
+          'http://example.com/ontology#name':
+            [ { type: 'literal', value: 'Andy Smith' } ]
+          'http://example.com/ontology#age':
+            [ { type: 'literal', value: '25' } ]
+      },{
+        'http://example.com/persons/john':
+          'http://example.com/ontology#name':
+            [ { type: 'literal', value: 'John Richard Smith' } ]
+          'http://example.com/ontology#noChildren':
+            [ { type: 'literal', value: '2' } ]
+      })
+
+      opc = rdfJson.compose op1, op2
+
+      expect( opc.getTriplesToAdd() ).triplesToEqual {
+        'http://example.com/persons/john':
+          'http://example.com/ontology#age':
+            [ { type: 'literal', value: '36' } ]
+        'http://example.com/persons/andy':
+          'http://example.com/ontology#age':
+            [ { type: 'literal', value: '25' } ]
+      }
+
+      expect( opc.getTriplesToDel() ).triplesToEqual {
+        'http://example.com/persons/john':
+          'http://example.com/ontology#noChildren':
+            [ { type: 'literal', value: '2' } ]
+      }
+
+
   describe 'transform method', ->
 
     describe 'basic testing:', ->
@@ -114,8 +162,8 @@ describe 'sharejs-rdf-json', ->
       op1Clone = op1.clone()
       op2Clone = op2.clone()
 
-      spyOn(op1, 'clone');
-      spyOn(op2, 'clone');
+      spyOn(op1, 'clone').andCallThrough()
+      spyOn(op2, 'clone').andCallThrough()
 
       op1_transformed = rdfJson.transform(op1, op2, 'left')
       it 'clones op1', ->
@@ -126,8 +174,10 @@ describe 'sharejs-rdf-json', ->
         expect(op2.clone).toHaveBeenCalled
 
       it 'does not modify the input operations', ->
-        expect(op1.getTriples()).triplesToEqual op1Clone.getTriples()
-        expect(op2.getTriples()).triplesToEqual op2Clone.getTriples()
+        expect(op1.getTriplesToAdd()).triplesToEqual op1Clone.getTriplesToAdd()
+        expect(op1.getTriplesToDel()).triplesToEqual op1Clone.getTriplesToDel()
+        expect(op2.getTriplesToAdd()).triplesToEqual op2Clone.getTriplesToAdd()
+        expect(op2.getTriplesToDel()).triplesToEqual op2Clone.getTriplesToDel()
 
       it 'throws error on bad side parameter', ->
         side = 'foobar'

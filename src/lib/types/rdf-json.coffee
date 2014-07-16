@@ -15,6 +15,11 @@ hashTripleObject = (obj) ->
   hashObject obj, ['type', 'value', 'lang', 'datatype']
 
 
+isTriplesEmpty = (triples) ->
+  return false for k, v of triples
+  return true
+
+
 cloneTriples = (triples) ->
   triplesClone = {}
 
@@ -49,7 +54,6 @@ cloneExportTriples = (triples) ->
 
 exportTriplesIntersect = (triples1, triples2) ->
   intersect = {}
-  triplesCount = 0
 
   for subjUri1, predicates1 of triples1
     continue if !triples2[subjUri1]
@@ -66,13 +70,44 @@ exportTriplesIntersect = (triples1, triples2) ->
               object1.lang  == object2.lang &&
               object1.datatype == object2.datatype)
             objects_intersect.push object1
-            triplesCount++
 
       if objects_intersect.length > 0
         intersect[subjUri1] = {} if !intersect[subjUri1]
         intersect[subjUri1][predUri1] = objects_intersect
 
-  return [ intersect, triplesCount ]
+  return intersect
+
+
+exportTriplesUnion = (triples1, triples2) ->
+  union = {}
+
+  objectsArrayContains = (objects, newObject) ->
+    properties = ['type', 'value', 'lang', 'datatype']
+    for objects in objects
+      objectsMatch = true
+      for property in properties
+        if object[property] != newObject[property]
+          objectsMatch = false
+          break
+
+      return true if objectsMatch
+    return false
+
+  addToUnion = (s, p, o) ->
+    union[s] = {} if !union[s]
+    union[s][p] = [] if !union[s][p]
+    union[s][p].push o if !objectsArrayContains(union[s][p], o)
+
+  walkTriples = (triples, cb) ->
+    for subjUri, predicates of triples
+      for predUri, objects of predicates
+        for object in objects
+          cb(subjUri, predUri, object)
+
+  walkTriples triples1, addToUnion
+  walkTriples triples2, addToUnion
+
+  return union
 
 
 exportTriplesDifference = (triplesMinuend, triplesSubtrahend) ->
@@ -194,28 +229,31 @@ class RdfJsonDoc
 
 
 class RdfJsonOperation
-  OP_INSERT: 'insert'
-  OP_DELETE: 'delete'
-
   @insert: (triplesToAdd) ->
-    new RdfJsonOperation(RdfJsonOperation::OP_INSERT, triplesToAdd)
+    new RdfJsonOperation(triplesToAdd, {})
 
-  @delete: (triplesToRemove) ->
-    new RdfJsonOperation(RdfJsonOperation::OP_DELETE, triplesToRemove)
+  @delete: (triplesToDelete) ->
+    new RdfJsonOperation({}, triplesToDelete)
 
   # triples in export format
-  constructor: (operation, triples) ->
-    @_operation = operation
-    @_triples = triples
+  constructor: (triplesToAdd, triplesToDelete) ->
+    @_triplesAdd = triplesToAdd
+    @_triplesDel = triplesToDelete
 
   clone: ->
-    new RdfJsonOperation(@operation(), cloneExportTriples(@getTriples()))
+    new RdfJsonOperation(cloneExportTriples(@getTriplesToAdd()), cloneExportTriples(@getTriplesToDel()))
 
-  operation: -> @_operation
+  getTriplesToAdd: -> @_triplesAdd
+  setTriplesToAdd: (triples) -> @_triplesAdd = triples
+  hasTriplesToAdd: -> !@_triplesEmpty(@_triplesAdd)
 
-  getTriples: -> @_triples
+  getTriplesToDel: -> @_triplesDel
+  setTriplesToDel: (triples) -> @_triplesDel = triples
+  hasTriplesToDel: -> !@_triplesEmpty(@_triplesDel)
 
-  setTriples: (triples) -> @_triples = triples
+  _triplesEmpty: (triples) ->
+    return false for k, v of triples
+    return true
 
 
 
@@ -231,11 +269,11 @@ rdfJson =
     throw new Error("Operation must be a RdfJsonOperation instance. Given: #{op}") unless op instanceof RdfJsonOperation
     newSnapshot = snapshot.clone()
 
-    switch op.operation()
-      when RdfJsonOperation::OP_INSERT
-        newSnapshot.insert op.getTriples()
-      when RdfJsonOperation::OP_DELETE
-        newSnapshot.delete op.getTriples()
+    if op.hasTriplesToAdd()
+      newSnapshot.insert op.getTriplesToAdd()
+
+    if op.hasTriplesToDel()
+      newSnapshot.delete op.getTriplesToDel()
 
     return newSnapshot
 
@@ -243,6 +281,11 @@ rdfJson =
   # side is "left" or "right"
   # "left": op2 to be applied first, "right": op1 first
   transform: (op1, op2, side) ->
+
+    transformTriples = (op1Triples, op2Triples) ->
+      intersect = exportTriplesIntersect op1Triples, op2Triples
+      exportTriplesDifference op1Triples, intersect
+
     op1t = op1.clone()
     op1First = side == 'right'
 
@@ -252,18 +295,24 @@ rdfJson =
     return op1t if op1First    # we are only modifying op1 if op2 is applied first
 
     # insertion + insertion or deletion + deletion is uncritical
-    return op1t if op1.operation() == op2.operation()
+    return op1t if isTriplesEmpty(op1.getTriplesToAdd()) && isTriplesEmpty(op2.getTriplesToAdd())
+    return op1t if isTriplesEmpty(op1.getTriplesToDel()) && isTriplesEmpty(op2.getTriplesToDel())
 
-    [triplesIntersect, triplesIntersectCount] = exportTriplesIntersect op1.getTriples(), op2.getTriples()
-
-    # op1 & op2 don't affect the same triples? => uncritical
-    return op1t if triplesIntersectCount == 0
-
-
-    triplesDiff = exportTriplesDifference op1.getTriples(), op2.getTriples()
-    op1t.setTriples triplesDiff
+    op1t.setTriplesToAdd exportTriplesDifference( op1.getTriplesToAdd(), op2.getTriplesToDel() )
+    op1t.setTriplesToDel exportTriplesDifference( op1.getTriplesToDel(), op2.getTriplesToAdd() )
 
     return op1t
+
+  # combine op1 and op2 to a single operation
+  compose: (op1, op2) ->
+    triplesToAddUnion = exportTriplesUnion op1.getTriplesToAdd(), op2.getTriplesToAdd()
+    triplesToDelUnion = exportTriplesUnion op1.getTriplesToDel(), op2.getTriplesToDel()
+
+    triplesToAdd = exportTriplesDifference triplesToAddUnion, triplesToDelUnion
+    triplesToDel = exportTriplesDifference triplesToDelUnion, triplesToAddUnion
+
+    new RdfJsonOperation(triplesToAdd, triplesToDel)
+
 
 
 if WEB?

@@ -139,6 +139,96 @@
         return expect(newSnapshot.exportTriples()).triplesToEqual(afterDeletionShouldBe);
       });
     });
+    describe('compose method', function() {
+      return it('works', function() {
+        var op1, op2, opc;
+        op1 = new RdfJsonOperation({
+          'http://example.com/persons/john': {
+            'http://example.com/ontology#name': [
+              {
+                type: 'literal',
+                value: 'John Richard Smith'
+              }
+            ],
+            'http://example.com/ontology#age': [
+              {
+                type: 'literal',
+                value: '36'
+              }
+            ]
+          }
+        }, {
+          'http://example.com/persons/andy': {
+            'http://example.com/ontology#name': [
+              {
+                type: 'literal',
+                value: 'Andy Smith'
+              }
+            ]
+          }
+        });
+        op2 = new RdfJsonOperation({
+          'http://example.com/persons/andy': {
+            'http://example.com/ontology#name': [
+              {
+                type: 'literal',
+                value: 'Andy Smith'
+              }
+            ],
+            'http://example.com/ontology#age': [
+              {
+                type: 'literal',
+                value: '25'
+              }
+            ]
+          }
+        }, {
+          'http://example.com/persons/john': {
+            'http://example.com/ontology#name': [
+              {
+                type: 'literal',
+                value: 'John Richard Smith'
+              }
+            ],
+            'http://example.com/ontology#noChildren': [
+              {
+                type: 'literal',
+                value: '2'
+              }
+            ]
+          }
+        });
+        opc = rdfJson.compose(op1, op2);
+        expect(opc.getTriplesToAdd()).triplesToEqual({
+          'http://example.com/persons/john': {
+            'http://example.com/ontology#age': [
+              {
+                type: 'literal',
+                value: '36'
+              }
+            ]
+          },
+          'http://example.com/persons/andy': {
+            'http://example.com/ontology#age': [
+              {
+                type: 'literal',
+                value: '25'
+              }
+            ]
+          }
+        });
+        return expect(opc.getTriplesToDel()).triplesToEqual({
+          'http://example.com/persons/john': {
+            'http://example.com/ontology#noChildren': [
+              {
+                type: 'literal',
+                value: '2'
+              }
+            ]
+          }
+        });
+      });
+    });
     return describe('transform method', function() {
       describe('basic testing:', function() {
         var op1, op1Clone, op1_transformed, op2, op2Clone, op2_transformed;
@@ -164,8 +254,8 @@
         });
         op1Clone = op1.clone();
         op2Clone = op2.clone();
-        spyOn(op1, 'clone');
-        spyOn(op2, 'clone');
+        spyOn(op1, 'clone').andCallThrough();
+        spyOn(op2, 'clone').andCallThrough();
         op1_transformed = rdfJson.transform(op1, op2, 'left');
         it('clones op1', function() {
           return expect(op1.clone).toHaveBeenCalled;
@@ -175,8 +265,10 @@
           return expect(op2.clone).toHaveBeenCalled;
         });
         it('does not modify the input operations', function() {
-          expect(op1.getTriples()).triplesToEqual(op1Clone.getTriples());
-          return expect(op2.getTriples()).triplesToEqual(op2Clone.getTriples());
+          expect(op1.getTriplesToAdd()).triplesToEqual(op1Clone.getTriplesToAdd());
+          expect(op1.getTriplesToDel()).triplesToEqual(op1Clone.getTriplesToDel());
+          expect(op2.getTriplesToAdd()).triplesToEqual(op2Clone.getTriplesToAdd());
+          return expect(op2.getTriplesToDel()).triplesToEqual(op2Clone.getTriplesToDel());
         });
         return it('throws error on bad side parameter', function() {
           var side;
