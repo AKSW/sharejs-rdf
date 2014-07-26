@@ -4,7 +4,7 @@ div.rdf-json-editor.row
       .col-lg-8
         h4 Triples
       .col-lg-4.controls
-        a.add-triple.glyphicon.glyphicon-plus(href="", title="Add triple", ng-click="addTriple('', '', {type: 'uri', value: ''})")
+        a.add-triple.glyphicon.glyphicon-plus(href="", title="Add triple", ng-click="addTriple('http://', 'http://', {type: 'literal', value: ''})")
 
   .col-lg-12
     ul.triples
@@ -35,4 +35,4 @@ div.rdf-json-editor.row
             input.data-type(type="text", ng-model="triple.o.dataType", title="Data type", ng-if="triple.o.type == 'literal'")
 
           a.edit-triple.glyphicon.glyphicon-edit(href="", title="Edit", ng-click="toggleTripleEdit(triple)")
-          a.remove-triple.glyphicon.glyphicon-minus(href="", title="Remove triple", ng-click="removeTriple(triple.id)")
+          a.remove-triple.glyphicon.glyphicon-minus(href="", title="Remove triple", ng-click="removeTripleById(triple.id)")

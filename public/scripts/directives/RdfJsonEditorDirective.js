@@ -26,6 +26,26 @@ angular.module('app').directive('rdfJsonEditor', function () {
       $scope.tripleJustAdded = {};
       $scope.triplePrevious = {};
 
+
+      $scope.$on('insertTriples', function (e, triples) {
+        for (var i = 0; i < triples.length; i++) {
+          var triple = triples[i];
+          addTriple(triple.s, triple.p, triple.o);
+        }
+
+        $scope.$apply();
+      });
+
+      $scope.$on('deleteTriples', function (e, triples) {
+        for (var i = 0; i < triples.length; i++) {
+          var triple = triples[i];
+          $scope.removeTriple(triple.s, triple.p, triple.o);
+        }
+
+        $scope.$apply();
+      });
+
+
       $scope.setTriplesByRdfJson = function (rdfJson) {
         $scope.triples = rdfJson2Triples(rdfJson);
       };
@@ -39,22 +59,24 @@ angular.module('app').directive('rdfJsonEditor', function () {
       };
 
       $scope.addTriple = function (s, p, o) {
-        var tripleId = nextTripleId++;
-
         finishEditingOfAllTriples();
 
-        $scope.triples.push({
-          id: tripleId,
-          s: s,
-          p: p,
-          o: o
-        });
+        var triple = addTriple(s, p, o);
 
-        $scope.editingTriples[tripleId] = true;
-        $scope.tripleJustAdded[tripleId] = true;
+        $scope.editingTriples[triple.id] = true;
+        $scope.tripleJustAdded[triple.id] = true;
       };
 
-      $scope.removeTriple = function (tripleId) {
+      $scope.removeTriple = function (s, p, o) {
+        for (var i = 0; i < $scope.triples.length; i++) {
+          var triple = $scope.triples[i];
+          if (triple.s === s && triple.p === p && objectsEqual(triple.o, o)) {
+            $scope.triples = removeTriple($scope.triples, triple.id);
+          }
+        }
+      };
+
+      $scope.removeTripleById = function (tripleId) {
         if (window.confirm('Are you sure you want to delete this triple?')) {
           if ($scope.editingTriples[tripleId]) {
             $scope.finishEditing(tripleId);
@@ -69,6 +91,10 @@ angular.module('app').directive('rdfJsonEditor', function () {
       };
 
       $scope.finishEditing = function (tripleId) {
+        if (duplicateTripleExists(tripleId)) {
+          return window.alert('Duplicate triples are not allowed.');
+        }
+
         $scope.editingTriples[tripleId] = false;
 
         if ($scope.tripleJustAdded[tripleId]) {
@@ -126,6 +152,46 @@ angular.module('app').directive('rdfJsonEditor', function () {
         throw new Error('Triple not found: ' + tripleId);
       };
 
+      var duplicateTripleExists = function (tripleId) {
+        var triple1 = tripleById(tripleId);
+
+        for (var i = 0; i < $scope.triples.length; i++) {
+          var triple2 = $scope.triples[i];
+
+          if (triple2.id === tripleId) {
+            continue;
+          }
+
+          if (triplesEqual(triple1, triple2)) {
+            return true;
+          }
+        }
+
+        return false;
+      };
+
+      var triplesEqual = function (triple1, triple2) {
+        return triple1.s === triple2.s &&
+               triple1.p === triple2.p &&
+               objectsEqual(triple1.o, triple2.o);
+      };
+
+      var objectsEqual = function (o1, o2) {
+        if (o1.type !== o2.type || o1.value !== o2.value) {
+          return false;
+        }
+
+        if (o1.lang && (o1.lang !== o2.lang)) {
+          return false;
+        }
+
+        if (o1.dataType && (o1.dataType !== o2.dataType)) {
+          return false;
+        }
+
+        return true;
+      };
+
       var cloneTriple = function (triple) {
         var clone = {};
 
@@ -145,6 +211,20 @@ angular.module('app').directive('rdfJsonEditor', function () {
         }
 
         return clone;
+      };
+
+      var addTriple = function (s, p, o) {
+        var tripleId = nextTripleId++;
+
+        var triple = {
+          id: tripleId,
+          s: s,
+          p: p,
+          o: o
+        };
+
+        $scope.triples.push(triple);
+        return triple;
       };
 
       var removeTriple = function (triples, tripleId) {
@@ -184,10 +264,17 @@ angular.module('app').directive('rdfJsonEditor', function () {
       };
 
       var tripleChanged = function (tripleId) {
+        var triple = tripleById(tripleId);
+        var previous = $scope.triplePrevious[tripleId];
+
+        if (triplesEqual(triple, previous)) {
+          return;
+        }
+
         $scope.$emit('rdf-json-operation', {
           op: TRIPLE_OP_EDIT,
-          triple: tripleById(tripleId),
-          previous: $scope.triplePrevious[tripleId]
+          triple: triple,
+          previous: previous
         });
       };
 
