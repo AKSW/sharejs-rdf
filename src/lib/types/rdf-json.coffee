@@ -51,6 +51,23 @@ cloneExportTriples = (triples) ->
 
   return triplesClone
 
+exportTriples = (triples) ->
+  _export = {}
+
+  for subjectUri, predicates of triples
+    _export[subjectUri] = {}
+    for predicateUri, objects of predicates
+      _export[subjectUri][predicateUri] = []
+      objectHashes = []
+      for objectHash, object of objects
+        objectHashes.push objectHash
+
+      objectHashes.sort()
+      for objectHash in objectHashes
+        object = objects[objectHash]
+        _export[subjectUri][predicateUri].push object
+
+  return _export
 
 exportTriplesIntersect = (triples1, triples2) ->
   intersect = {}
@@ -151,23 +168,12 @@ class RdfJsonDoc
     @_triples = {}
     @insert triples
 
-  exportTriples: ->
-    _export = {}
+  @byInternalTripleSet: (triples) ->
+    doc = new RdfJsonDoc
+    doc._triples = triples
+    return doc
 
-    for subjectUri, predicates of @_triples
-      _export[subjectUri] = {}
-      for predicateUri, objects of predicates
-        _export[subjectUri][predicateUri] = []
-        objectHashes = []
-        for objectHash, object of objects
-          objectHashes.push objectHash
-
-        objectHashes.sort()
-        for objectHash in objectHashes
-          object = objects[objectHash]
-          _export[subjectUri][predicateUri].push object
-
-    return _export
+  exportTriples: -> exportTriples(@_triples)
 
   clone: ->
     doc = new RdfJsonDoc
@@ -260,13 +266,14 @@ class RdfJsonOperation
 rdfJson =
   Doc: RdfJsonDoc
   Operation: RdfJsonOperation
+  exportTriples: exportTriples
   name: 'rdf-json'
 
   create: -> new RdfJsonDoc
 
   apply: (snapshot, op) ->
-    throw new Error("Snapshot must be a RdfJsonDoc instance. Given: #{snapshot}") unless snapshot instanceof RdfJsonDoc
-    throw new Error("Operation must be a RdfJsonOperation instance. Given: #{op}") unless op instanceof RdfJsonOperation
+    snapshot = @_ensureDoc snapshot
+    op = @_ensureOp op
     newSnapshot = snapshot.clone()
 
     if op.hasTriplesToAdd()
@@ -312,6 +319,18 @@ rdfJson =
     triplesToDel = exportTriplesDifference triplesToDelUnion, triplesToAddUnion
 
     new RdfJsonOperation(triplesToAdd, triplesToDel)
+
+  _ensureDoc: (doc) ->
+    return doc if doc instanceof RdfJsonDoc
+    return RdfJsonDoc.byInternalTripleSet(doc._triples) if typeof doc == 'object' && doc._triples
+
+    throw new Error("Snapshot must be a rdf-json document. Given: #{snapshot}")
+
+  _ensureOp: (op) ->
+    return op if op instanceof RdfJsonOperation
+    return new RdfJsonOperation(op._triplesAdd, op._triplesDel) if typeof op == 'object' && op._triplesAdd && op._triplesDel
+
+    throw new Error("Operation must be a rdf-json operation. Given: #{op}")
 
 
 

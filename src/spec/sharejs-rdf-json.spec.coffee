@@ -94,6 +94,22 @@ describe 'sharejs-rdf-json', ->
       newSnapshot = rdfJson.apply(snapshot, op)
       expect(newSnapshot.exportTriples()).triplesToEqual afterDeletionShouldBe
 
+    it 'works with serialised snapshot', ->
+      snapshot = new RdfJsonDoc(testTriples)
+      snapshot = JSON.parse JSON.stringify snapshot
+      op = RdfJsonOperation.insert testInsertionTriples
+
+      newSnapshot = rdfJson.apply(snapshot, op)
+      expect(newSnapshot.exportTriples()).triplesToEqual afterInsertionShouldBe
+
+    it 'works with serialised operation', ->
+      snapshot = new RdfJsonDoc(testTriples)
+      op = RdfJsonOperation.insert testInsertionTriples
+      op = JSON.parse JSON.stringify op
+
+      newSnapshot = rdfJson.apply(snapshot, op)
+      expect(newSnapshot.exportTriples()).triplesToEqual afterInsertionShouldBe
+
 
   describe 'compose method', ->
 

@@ -131,12 +131,28 @@
         newSnapshot = rdfJson.apply(snapshot, op);
         return expect(newSnapshot.exportTriples()).triplesToEqual(afterInsertionShouldBe);
       });
-      return it('does deletion', function() {
+      it('does deletion', function() {
         var newSnapshot, op, snapshot;
         snapshot = new RdfJsonDoc(testTriples);
         op = RdfJsonOperation["delete"](testDeletionTriples);
         newSnapshot = rdfJson.apply(snapshot, op);
         return expect(newSnapshot.exportTriples()).triplesToEqual(afterDeletionShouldBe);
+      });
+      it('works with serialised snapshot', function() {
+        var newSnapshot, op, snapshot;
+        snapshot = new RdfJsonDoc(testTriples);
+        snapshot = JSON.parse(JSON.stringify(snapshot));
+        op = RdfJsonOperation.insert(testInsertionTriples);
+        newSnapshot = rdfJson.apply(snapshot, op);
+        return expect(newSnapshot.exportTriples()).triplesToEqual(afterInsertionShouldBe);
+      });
+      return it('works with serialised operation', function() {
+        var newSnapshot, op, snapshot;
+        snapshot = new RdfJsonDoc(testTriples);
+        op = RdfJsonOperation.insert(testInsertionTriples);
+        op = JSON.parse(JSON.stringify(op));
+        newSnapshot = rdfJson.apply(snapshot, op);
+        return expect(newSnapshot.exportTriples()).triplesToEqual(afterInsertionShouldBe);
       });
     });
     describe('compose method', function() {
