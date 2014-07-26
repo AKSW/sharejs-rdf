@@ -9,7 +9,8 @@ angular.module('app').factory('AlertService', [function() {
     alert : function(message, type) {
       type = type || 'info';
 
-      angular.element('#alerts').scope().$emit('alert', message, type);
+      var alertsElement = angular.element( document.getElementById('alerts') );
+      alertsElement.scope().$emit('alert', message, type);
     },
 
     info : function(message) {
