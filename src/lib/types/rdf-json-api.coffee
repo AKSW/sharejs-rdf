@@ -5,8 +5,24 @@ rdfJson = require './rdf-json' if typeof WEB is 'undefined'
 rdfJson.api =
   provides: { rdfJson: true }
 
+  insert: (triples, callback) ->
+    op = rdfJson.Operation.insert triples
+
+    @submitOp op, callback
+    op
+
+  delete: (triples, callback) ->
+    op = rdfJson.Operation.delete triples
+
+    @submitOp op, callback
+    op
+
+  update: (triplesToIns, triplesToDel, callback) ->
+    op = new rdfJson.Operation(triplesToIns, triplesToDel)
+
+    @submitOp op, callback
+    op
+
   _register: ->
     @on 'remoteop', (op) ->
-      switch op._operation
-        when 'insert' then @emit 'insert', op._triples
-        when 'delete' then @emit 'delete', op._triples
+      @emit 'update', op._triplesToAdd, op._triplesToDel
