@@ -51,7 +51,12 @@ module.exports = (grunt) ->
         ext: '.js'
     concat:
       web:
-        src: ['lib/web-prelude.js', 'lib/types/rdf-json.js', 'lib/types/rdf-json-api.js']
+        src: [
+          'lib/web-prelude.js',
+          'lib/types/rdf-json.js',
+          'lib/types/rdf-json-api.js',
+          'node_modules/spark-md5/spark-md5.js'
+        ]
         dest: 'web/web.js'
     uglify:
       web:
