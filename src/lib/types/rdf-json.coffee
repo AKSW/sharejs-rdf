@@ -167,6 +167,8 @@ class RdfJsonDoc
     @triples = {}
     @insert triples
 
+  @fromData: (data) -> RdfJsonDoc.byInternalTripleSet(data.triples)
+
   @byInternalTripleSet: (triples) ->
     doc = new RdfJsonDoc
     doc.triples = triples
@@ -239,6 +241,8 @@ class RdfJsonOperation
 
   @delete: (triplesToDelete) ->
     new RdfJsonOperation({}, triplesToDelete)
+
+  @fromData: (data) -> new RdfJsonOperation(data.triplesAdd, data.triplesDel)
 
   # triples in export format
   constructor: (triplesToAdd, triplesToDelete) ->
@@ -318,13 +322,13 @@ rdfJson =
 
   _ensureDoc: (doc) ->
     return doc if doc instanceof RdfJsonDoc
-    return RdfJsonDoc.byInternalTripleSet(doc.triples) if typeof doc == 'object' && doc.triples
+    return RdfJsonDoc.fromData(doc) if typeof doc == 'object' && doc.triples
 
     throw new Error("Snapshot must be a rdf-json document. Given: #{doc}")
 
   _ensureOp: (op) ->
     return op if op instanceof RdfJsonOperation
-    return new RdfJsonOperation(op.triplesAdd, op.triplesDel) if typeof op == 'object' && op.triplesAdd && op.triplesDel
+    return RdfJsonOperation.fromData(op) if typeof op == 'object' && op.triplesAdd && op.triplesDel
 
     throw new Error("Operation must be a rdf-json operation. Given: #{op}")
 

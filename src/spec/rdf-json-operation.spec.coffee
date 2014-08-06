@@ -40,6 +40,14 @@ describe 'RdfJsonOperation', ->
     expect(clone.getTriplesToAdd()).triplesToEqual testTriples
     expect(clone.getTriplesToDel()).triplesToEqual testTriples2
 
+  it 'can create from serialised data', ->
+    op = new RdfJsonOperation(testTriples, testTriples2)
+    serialised = JSON.parse JSON.stringify(op)
+
+    op2 = RdfJsonOperation.fromData serialised
+    expect(op2.getTriplesToAdd()).triplesToEqual testTriples
+    expect(op2.getTriplesToDel()).triplesToEqual testTriples2
+
 
   describe 'has working factory methods:', ->
 

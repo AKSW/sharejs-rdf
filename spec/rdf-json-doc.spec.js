@@ -41,17 +41,19 @@
       doc = new RdfJsonDoc();
       return expect(doc.exportTriples()).triplesToEqual({});
     });
-    it('can insert', function() {
-      var doc;
-      doc = new RdfJsonDoc();
-      doc.insert(testTriples);
-      return expect(doc.exportTriples()).triplesToEqual(testTriples);
-    });
     it('can clone', function() {
       var clone, doc;
       doc = new RdfJsonDoc(testTriples);
       clone = doc.clone();
       return expect(clone.exportTriples()).triplesToEqual(testTriples);
+    });
+    it('can create from serialised data', function() {
+      var doc, doc2, serialised;
+      doc = new RdfJsonDoc;
+      doc.insert(testTriples);
+      serialised = JSON.parse(JSON.stringify(doc));
+      doc2 = RdfJsonDoc.fromData(serialised);
+      return expect(doc2.exportTriples()).triplesToEqual(testTriples);
     });
     it('clone is independent of original document', function() {
       var clone, doc;
@@ -67,6 +69,12 @@
           ]
         }
       });
+      return expect(doc.exportTriples()).triplesToEqual(testTriples);
+    });
+    it('can insert', function() {
+      var doc;
+      doc = new RdfJsonDoc();
+      doc.insert(testTriples);
       return expect(doc.exportTriples()).triplesToEqual(testTriples);
     });
     it('can delete', function() {

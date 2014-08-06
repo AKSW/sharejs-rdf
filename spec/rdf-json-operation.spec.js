@@ -52,6 +52,14 @@
       expect(clone.getTriplesToAdd()).triplesToEqual(testTriples);
       return expect(clone.getTriplesToDel()).triplesToEqual(testTriples2);
     });
+    it('can create from serialised data', function() {
+      var op, op2, serialised;
+      op = new RdfJsonOperation(testTriples, testTriples2);
+      serialised = JSON.parse(JSON.stringify(op));
+      op2 = RdfJsonOperation.fromData(serialised);
+      expect(op2.getTriplesToAdd()).triplesToEqual(testTriples);
+      return expect(op2.getTriplesToDel()).triplesToEqual(testTriples2);
+    });
     return describe('has working factory methods:', function() {
       it('insert', function() {
         var op;

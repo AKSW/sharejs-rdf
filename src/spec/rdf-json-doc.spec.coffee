@@ -22,15 +22,19 @@ describe 'RdfJsonDoc', ->
     doc = new RdfJsonDoc()
     expect(doc.exportTriples()).triplesToEqual {}
 
-  it 'can insert', ->
-    doc = new RdfJsonDoc()
-    doc.insert testTriples
-    expect(doc.exportTriples()).triplesToEqual testTriples
-
   it 'can clone', ->
     doc = new RdfJsonDoc(testTriples)
     clone = doc.clone()
     expect(clone.exportTriples()).triplesToEqual testTriples
+
+  it 'can create from serialised data', ->
+    doc = new RdfJsonDoc
+    doc.insert testTriples
+
+    serialised = JSON.parse JSON.stringify(doc)
+    doc2 = RdfJsonDoc.fromData serialised
+
+    expect(doc2.exportTriples()).triplesToEqual testTriples
 
   it 'clone is independent of original document', ->
     doc = new RdfJsonDoc(testTriples)
@@ -41,6 +45,11 @@ describe 'RdfJsonDoc', ->
         'http://example.com/ontology#name':
           [ { type: 'literal', value: 'John R. Smith' } ]
     )
+    expect(doc.exportTriples()).triplesToEqual testTriples
+
+  it 'can insert', ->
+    doc = new RdfJsonDoc()
+    doc.insert testTriples
     expect(doc.exportTriples()).triplesToEqual testTriples
 
   it 'can delete', ->
