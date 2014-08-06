@@ -1,11 +1,9 @@
 (function() {
-  var RdfJsonDoc, RdfJsonOperation, jsonld, rdfJson;
+  var RdfJsonDoc, RdfJsonOperation, rdfJson;
 
   require('jasmine-expect');
 
   require('./matchers/triples');
-
-  jsonld = require('jsonld');
 
   rdfJson = require('../lib/types/rdf-json');
 
@@ -33,18 +31,9 @@
         return expect(doc instanceof RdfJsonDoc).toBeTruthy();
       });
       return it('returns empty, but parsable set of triples', function() {
-        var done, triples;
-        done = false;
+        var triples;
         triples = doc.exportTriples();
-        runs(function() {
-          return jsonld.flatten(triples, function(err, flattened) {
-            expect(flattened).toEqual({});
-            return done = true;
-          });
-        });
-        return waitsFor(function() {
-          return done;
-        });
+        return expect(triples).toEqual({});
       });
     });
     describe('apply method', function() {

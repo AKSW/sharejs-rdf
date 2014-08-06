@@ -1,7 +1,6 @@
 require 'jasmine-expect'
 require './matchers/triples'
 
-jsonld = require 'jsonld'
 rdfJson = require '../lib/types/rdf-json'
 
 RdfJsonDoc = rdfJson.Doc
@@ -31,16 +30,8 @@ describe 'sharejs-rdf-json', ->
       expect(doc instanceof RdfJsonDoc).toBeTruthy();
 
     it 'returns empty, but parsable set of triples', ->
-      done = false
       triples = doc.exportTriples()
-
-      runs () ->
-        jsonld.flatten triples, (err, flattened) ->
-          expect(flattened).toEqual({})
-          done = true
-
-      waitsFor () ->
-        done
+      expect(triples).toEqual {}
 
 
   describe 'apply method', ->
