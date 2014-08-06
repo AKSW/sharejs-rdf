@@ -1,10 +1,6 @@
 (function() {
-  var matchers;
-
-  matchers = require('jasmine-expect');
-
   beforeEach(function() {
-    var flattenTriples, _matchers;
+    var flattenTriples, matchers;
     flattenTriples = function(triples) {
       var objStr, object, objects, predUri, predicates, serialized, subjUri, tripleStr, _i, _len;
       serialized = [];
@@ -28,7 +24,7 @@
       }
       return serialized;
     };
-    _matchers = {
+    matchers = {
       triplesToEqual: function(other) {
         var actual_flat, actual_triple, i, other_flat, other_triple, _i, _len;
         actual_flat = flattenTriples(this.actual);
@@ -48,7 +44,7 @@
         return true;
       }
     };
-    return this.addMatchers(_matchers);
+    return this.addMatchers(matchers);
   });
 
 }).call(this);

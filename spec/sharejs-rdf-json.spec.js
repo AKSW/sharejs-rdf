@@ -14,7 +14,7 @@
   RdfJsonOperation = rdfJson.Operation;
 
   describe('sharejs-rdf-json', function() {
-    it('is named rdf-json', function() {
+    it('is named "rdf-json"', function() {
       return expect(rdfJson.name).toEqual('rdf-json');
     });
     it('can be attached to sharejs', function() {

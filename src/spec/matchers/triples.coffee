@@ -1,6 +1,4 @@
 
-matchers = require 'jasmine-expect'
-
 beforeEach () ->
 
   flattenTriples = (triples) ->
@@ -18,7 +16,7 @@ beforeEach () ->
     return serialized
 
 
-  _matchers =
+  matchers =
     # works like toEqual(), but assumes a valid rdf/json object and
     # is aware that the order of the triples does not matter
     triplesToEqual: (other) ->
@@ -36,4 +34,4 @@ beforeEach () ->
 
       return true
 
-  @addMatchers _matchers
+  @addMatchers matchers

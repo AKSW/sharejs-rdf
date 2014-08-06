@@ -10,7 +10,7 @@ RdfJsonOperation = rdfJson.Operation
 
 describe 'sharejs-rdf-json', ->
 
-  it 'is named rdf-json', ->
+  it 'is named "rdf-json"', ->
     expect(rdfJson.name).toEqual('rdf-json')
 
   it 'can be attached to sharejs', ->
