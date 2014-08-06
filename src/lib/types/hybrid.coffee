@@ -6,22 +6,31 @@ textOT = null
 
 
 class HybridDoc
-  constructor: (turtleContent, rdfJsonContent) ->
-    @turtleContent = turtleContent
-    @rdfJsonContent = rdfJsonContent
+  @fromData: (data) -> new HybridDoc data.turtleContent, rdfJsonOT.Doc.fromData(data.rdfJsonDoc)
 
-  clone: -> new HybridDoc(@turtleContent, @rdfJsonContent)
+  constructor: (turtleContent, rdfJsonContent) ->
+    @setTurtleContent turtleContent
+    if rdfJsonContent instanceof rdfJsonOT.Doc
+      @rdfJsonDoc = rdfJsonContent
+    else
+      @setRdfJsonContent rdfJsonContent
+
+  clone: -> new HybridDoc @getTurtleContent(), @getRdfJsonContent()
 
   getTurtleContent: -> @turtleContent
   setTurtleContent: (turtleContent) -> @turtleContent = turtleContent
 
-  getRdfJsonContent: -> @rdfJsonContent
-  setRdfJsonContent: (rdfJsonContent) -> @rdfJsonContent = rdfJsonContent
+  getRdfJsonDoc: -> @rdfJsonDoc
+  getRdfJsonContent: -> @rdfJsonDoc.exportTriples()
+  setRdfJsonContent: (rdfJsonContent) ->
+    @rdfJsonDoc = new rdfJsonOT.Doc
+    @rdfJsonDoc.insert rdfJsonContent
+    @rdfJsonDoc
 
 
 # Operation that may contain both text and structured data operations
 class HybridOp
-  @fromData: (data) -> new HybridOp(data.textOps, data.rdfInsertions, data.rdfDeletions)
+  @fromData: (data) -> new HybridOp data.textOps, data.rdfInsertions, data.rdfDeletions
 
   constructor: (textOps, rdfInsertions, rdfDeletions) ->
     @textOps = textOps
@@ -29,7 +38,7 @@ class HybridOp
     @rdfDeletions = rdfDeletions
 
   clone: ->
-    new HybridOp(@textOps.slice(), @rdfInsertions.slice(), @rdfDeletions.slice())
+    new HybridOp @textOps.slice(), @rdfInsertions.slice(), @rdfDeletions.slice()
 
   getTextOps: -> @textOps
   setTextOps: (textOps) -> @textOps = textOps
@@ -48,7 +57,15 @@ hybridOT =
 
   create: () -> new HybridDoc('', {})
 
-  apply: (snapshot, op) -> # TODO
+  apply: (snapshot, op) ->
+    snapshot = @_ensureDoc snapshot
+    op = @_ensureOp op
+
+    textDoc = textOT.apply snapshot.getTurtleContent(), op.getTextOps()
+    rdfOp = new rdfJsonOT.Operation op.getRdfInsertions(), op.getRdfDeletions()
+    rdfDoc = rdfJsonOT.apply snapshot.getRdfJsonDoc(), rdfOp
+
+    return new HybridDoc textDoc, rdfDoc
 
   # return clone of op1, transformed by op2
   # side is "left" or "right"
@@ -57,6 +74,18 @@ hybridOT =
 
   # combine op1 and op2 to a single operation
   compose: (op1, op2) -> # TODO
+
+  _ensureDoc: (doc) ->
+    return doc if doc instanceof HybridDoc
+    return HybridDoc.fromData doc if typeof doc == 'object' && doc.turtleContent && doc.rdfContent
+
+    throw new Error("Snapshot must be a turtle + rdf-json hybrid document. Given: #{doc}")
+
+  _ensureOp: (op) ->
+    return op if op instanceof HybridOp
+    return HybridOp.fromData op if typeof op == 'object' && op.textOps && op.rdfInsertions && op.rdfDeletions
+
+    throw new Error("Operation must be a turtle + rdf-json hybrid operation. Given: #{op}")
 
 
 if WEB?

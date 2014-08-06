@@ -247,26 +247,29 @@ RdfJsonDoc = (function() {
     if (triples == null) {
       triples = {};
     }
-    this._uriRegex = /^\w+:\/\/\w+(\.\w+)+\//;
-    this._triples = {};
+    this.triples = {};
     this.insert(triples);
   }
+
+  RdfJsonDoc.fromData = function(data) {
+    return RdfJsonDoc.byInternalTripleSet(data.triples);
+  };
 
   RdfJsonDoc.byInternalTripleSet = function(triples) {
     var doc;
     doc = new RdfJsonDoc;
-    doc._triples = triples;
+    doc.triples = triples;
     return doc;
   };
 
   RdfJsonDoc.prototype.exportTriples = function() {
-    return exportTriples(this._triples);
+    return exportTriples(this.triples);
   };
 
   RdfJsonDoc.prototype.clone = function() {
     var doc;
     doc = new RdfJsonDoc;
-    doc._triples = cloneTriples(this._triples);
+    doc.triples = cloneTriples(this.triples);
     return doc;
   };
 
@@ -276,8 +279,8 @@ RdfJsonDoc = (function() {
     for (subjectUri in triples) {
       predicates = triples[subjectUri];
       this.assertSubjectIsUri(subjectUri);
-      if (!this._triples[subjectUri]) {
-        this._triples[subjectUri] = {};
+      if (!this.triples[subjectUri]) {
+        this.triples[subjectUri] = {};
       }
       _results.push((function() {
         var _results1;
@@ -286,8 +289,8 @@ RdfJsonDoc = (function() {
           objects = predicates[predicateUri];
           this.assertPredicateIsUri(predicateUri, subjectUri);
           this.assertObjectsArray(objects, subjectUri, predicateUri);
-          if (!this._triples[subjectUri][predicateUri]) {
-            this._triples[subjectUri][predicateUri] = {};
+          if (!this.triples[subjectUri][predicateUri]) {
+            this.triples[subjectUri][predicateUri] = {};
           }
           _results1.push((function() {
             var _i, _len, _results2;
@@ -295,7 +298,7 @@ RdfJsonDoc = (function() {
             for (_i = 0, _len = objects.length; _i < _len; _i++) {
               object = objects[_i];
               objectHash = hashTripleObject(object);
-              _results2.push(this._triples[subjectUri][predicateUri][objectHash] = object);
+              _results2.push(this.triples[subjectUri][predicateUri][objectHash] = object);
             }
             return _results2;
           }).call(this));
@@ -312,7 +315,7 @@ RdfJsonDoc = (function() {
     for (subjectUri in triples) {
       predicates = triples[subjectUri];
       this.assertSubjectIsUri(subjectUri);
-      if (!this._triples[subjectUri]) {
+      if (!this.triples[subjectUri]) {
         continue;
       }
       predicateCount = 0;
@@ -321,15 +324,15 @@ RdfJsonDoc = (function() {
         this.assertPredicateIsUri(predicateUri, subjectUri);
         this.assertObjectsArray(objects, subjectUri, predicateUri);
         predicateCount++;
-        if (!this._triples[subjectUri][predicateUri]) {
+        if (!this.triples[subjectUri][predicateUri]) {
           continue;
         }
-        presentObjects = this._triples[subjectUri][predicateUri];
+        presentObjects = this.triples[subjectUri][predicateUri];
         for (_i = 0, _len = objects.length; _i < _len; _i++) {
           objectToRemove = objects[_i];
           objectToRemoveHash = hashTripleObject(objectToRemove);
           if (presentObjects[objectToRemoveHash]) {
-            delete this._triples[subjectUri][predicateUri][objectToRemoveHash];
+            delete this.triples[subjectUri][predicateUri][objectToRemoveHash];
           }
         }
         objectCount = 0;
@@ -339,11 +342,11 @@ RdfJsonDoc = (function() {
         }
         if (objectCount === 0) {
           predicateCount--;
-          delete this._triples[subjectUri][predicateUri];
+          delete this.triples[subjectUri][predicateUri];
         }
       }
       if (predicateCount === 0) {
-        _results.push(delete this._triples[subjectUri]);
+        _results.push(delete this.triples[subjectUri]);
       } else {
         _results.push(void 0);
       }
@@ -370,7 +373,7 @@ RdfJsonDoc = (function() {
   };
 
   RdfJsonDoc.prototype.isUri = function(str) {
-    return str.match(this._uriRegex);
+    return str.match(/^\w+:\/\/\w+(\.\w+)+\//);
   };
 
   return RdfJsonDoc;
@@ -386,9 +389,13 @@ RdfJsonOperation = (function() {
     return new RdfJsonOperation({}, triplesToDelete);
   };
 
+  RdfJsonOperation.fromData = function(data) {
+    return new RdfJsonOperation(data.triplesAdd, data.triplesDel);
+  };
+
   function RdfJsonOperation(triplesToAdd, triplesToDelete) {
-    this._triplesAdd = triplesToAdd;
-    this._triplesDel = triplesToDelete;
+    this.triplesAdd = triplesToAdd;
+    this.triplesDel = triplesToDelete;
   }
 
   RdfJsonOperation.prototype.clone = function() {
@@ -396,27 +403,27 @@ RdfJsonOperation = (function() {
   };
 
   RdfJsonOperation.prototype.getTriplesToAdd = function() {
-    return this._triplesAdd;
+    return this.triplesAdd;
   };
 
   RdfJsonOperation.prototype.setTriplesToAdd = function(triples) {
-    return this._triplesAdd = triples;
+    return this.triplesAdd = triples;
   };
 
   RdfJsonOperation.prototype.hasTriplesToAdd = function() {
-    return !this._triplesEmpty(this._triplesAdd);
+    return !this._triplesEmpty(this.triplesAdd);
   };
 
   RdfJsonOperation.prototype.getTriplesToDel = function() {
-    return this._triplesDel;
+    return this.triplesDel;
   };
 
   RdfJsonOperation.prototype.setTriplesToDel = function(triples) {
-    return this._triplesDel = triples;
+    return this.triplesDel = triples;
   };
 
   RdfJsonOperation.prototype.hasTriplesToDel = function() {
-    return !this._triplesEmpty(this._triplesDel);
+    return !this._triplesEmpty(this.triplesDel);
   };
 
   RdfJsonOperation.prototype._triplesEmpty = function(triples) {
@@ -490,17 +497,17 @@ rdfJson = {
     if (doc instanceof RdfJsonDoc) {
       return doc;
     }
-    if (typeof doc === 'object' && doc._triples) {
-      return RdfJsonDoc.byInternalTripleSet(doc._triples);
+    if (typeof doc === 'object' && doc.triples) {
+      return RdfJsonDoc.fromData(doc);
     }
-    throw new Error("Snapshot must be a rdf-json document. Given: " + snapshot);
+    throw new Error("Snapshot must be a rdf-json document. Given: " + doc);
   },
   _ensureOp: function(op) {
     if (op instanceof RdfJsonOperation) {
       return op;
     }
-    if (typeof op === 'object' && op._triplesAdd && op._triplesDel) {
-      return new RdfJsonOperation(op._triplesAdd, op._triplesDel);
+    if (typeof op === 'object' && op.triplesAdd && op.triplesDel) {
+      return RdfJsonOperation.fromData(op);
     }
     throw new Error("Operation must be a rdf-json operation. Given: " + op);
   }
@@ -526,7 +533,7 @@ rdfJson.api = {
     rdfJson: true
   },
   getData: function() {
-    return rdfJson.exportTriples(this.snapshot._triples);
+    return rdfJson.exportTriples(this.snapshot.triples);
   },
   insert: function(triples, callback) {
     var op;
@@ -548,7 +555,7 @@ rdfJson.api = {
   },
   _register: function() {
     return this.on('remoteop', function(op) {
-      return this.emit('update', op._triplesAdd, op._triplesDel);
+      return this.emit('update', op.triplesAdd, op.triplesDel);
     });
   }
 };
@@ -564,13 +571,21 @@ rdfJsonOT = null;
 textOT = null;
 
 HybridDoc = (function() {
+  HybridDoc.fromData = function(data) {
+    return new HybridDoc(data.turtleContent, rdfJsonOT.Doc.fromData(data.rdfJsonDoc));
+  };
+
   function HybridDoc(turtleContent, rdfJsonContent) {
-    this.turtleContent = turtleContent;
-    this.rdfJsonContent = rdfJsonContent;
+    this.setTurtleContent(turtleContent);
+    if (rdfJsonContent instanceof rdfJsonOT.Doc) {
+      this.rdfJsonDoc = rdfJsonContent;
+    } else {
+      this.setRdfJsonContent(rdfJsonContent);
+    }
   }
 
   HybridDoc.prototype.clone = function() {
-    return new HybridDoc(this.turtleContent, this.rdfJsonContent);
+    return new HybridDoc(this.getTurtleContent(), this.getRdfJsonContent());
   };
 
   HybridDoc.prototype.getTurtleContent = function() {
@@ -581,12 +596,18 @@ HybridDoc = (function() {
     return this.turtleContent = turtleContent;
   };
 
+  HybridDoc.prototype.getRdfJsonDoc = function() {
+    return this.rdfJsonDoc;
+  };
+
   HybridDoc.prototype.getRdfJsonContent = function() {
-    return this.rdfJsonContent;
+    return this.rdfJsonDoc.exportTriples();
   };
 
   HybridDoc.prototype.setRdfJsonContent = function(rdfJsonContent) {
-    return this.rdfJsonContent = rdfJsonContent;
+    this.rdfJsonDoc = new rdfJsonOT.Doc;
+    this.rdfJsonDoc.insert(rdfJsonContent);
+    return this.rdfJsonDoc;
   };
 
   return HybridDoc;
@@ -643,9 +664,35 @@ hybridOT = {
   create: function() {
     return new HybridDoc('', {});
   },
-  apply: function(snapshot, op) {},
+  apply: function(snapshot, op) {
+    var rdfDoc, rdfOp, textDoc;
+    snapshot = this._ensureDoc(snapshot);
+    op = this._ensureOp(op);
+    textDoc = textOT.apply(snapshot.getTurtleContent(), op.getTextOps());
+    rdfOp = new rdfJsonOT.Operation(op.getRdfInsertions(), op.getRdfDeletions());
+    rdfDoc = rdfJsonOT.apply(snapshot.getRdfJsonDoc(), rdfOp);
+    return new HybridDoc(textDoc, rdfDoc);
+  },
   transform: function(op1, op2, side) {},
-  compose: function(op1, op2) {}
+  compose: function(op1, op2) {},
+  _ensureDoc: function(doc) {
+    if (doc instanceof HybridDoc) {
+      return doc;
+    }
+    if (typeof doc === 'object' && doc.turtleContent && doc.rdfContent) {
+      return HybridDoc.fromData(doc);
+    }
+    throw new Error("Snapshot must be a turtle + rdf-json hybrid document. Given: " + doc);
+  },
+  _ensureOp: function(op) {
+    if (op instanceof HybridOp) {
+      return op;
+    }
+    if (typeof op === 'object' && op.textOps && op.rdfInsertions && op.rdfDeletions) {
+      return HybridOp.fromData(op);
+    }
+    throw new Error("Operation must be a turtle + rdf-json hybrid operation. Given: " + op);
+  }
 };
 
 if (WEB != null) {

@@ -37,7 +37,7 @@
       });
     });
     describe('apply method', function() {
-      var afterDeletionShouldBe, afterInsertionShouldBe, testDeletionTriples, testInsertionTriples, testTriples;
+      var afterDeletionShouldBe, afterInsertionDeletionShouldBe, afterInsertionShouldBe, testDeletionTriples, testInsertionTriples, testTriples;
       testTriples = {
         'http://example.com/persons/john': {
           'http://example.com/ontology#name': [
@@ -113,6 +113,27 @@
           ]
         }
       };
+      afterInsertionDeletionShouldBe = {
+        'http://example.com/persons/john': {
+          'http://example.com/ontology#name': [
+            {
+              type: 'literal',
+              value: 'John R. Smith'
+            }, {
+              type: 'literal',
+              value: 'John Richard Smith'
+            }
+          ]
+        },
+        'http://example.com/persons/andy': {
+          'http://example.com/ontology#name': [
+            {
+              type: 'literal',
+              value: 'Andy Smith'
+            }
+          ]
+        }
+      };
       it('does insertion', function() {
         var newSnapshot, op, snapshot;
         snapshot = new RdfJsonDoc(testTriples);
@@ -126,6 +147,13 @@
         op = RdfJsonOperation["delete"](testDeletionTriples);
         newSnapshot = rdfJson.apply(snapshot, op);
         return expect(newSnapshot.exportTriples()).triplesToEqual(afterDeletionShouldBe);
+      });
+      it('does insertion + deletion', function() {
+        var newSnapshot, op, snapshot;
+        snapshot = new RdfJsonDoc(testTriples);
+        op = new RdfJsonOperation(testInsertionTriples, testDeletionTriples);
+        newSnapshot = rdfJson.apply(snapshot, op);
+        return expect(newSnapshot.exportTriples()).triplesToEqual(afterInsertionDeletionShouldBe);
       });
       it('works with serialised snapshot', function() {
         var newSnapshot, op, snapshot;
