@@ -275,11 +275,8 @@ rdfJson =
     op = @_ensureOp op
     newSnapshot = snapshot.clone()
 
-    if op.hasTriplesToAdd()
-      newSnapshot.insert op.getTriplesToAdd()
-
-    if op.hasTriplesToDel()
-      newSnapshot.delete op.getTriplesToDel()
+    newSnapshot.insert op.getTriplesToAdd() if op.hasTriplesToAdd()
+    newSnapshot.delete op.getTriplesToDel() if op.hasTriplesToDel()
 
     return newSnapshot
 

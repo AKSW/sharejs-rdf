@@ -70,6 +70,17 @@ describe 'sharejs-rdf-json', ->
         'http://example.com/ontology#name':
           [ { type: 'literal', value: 'Andy Smith' } ]
 
+    afterInsertionDeletionShouldBe =
+      'http://example.com/persons/john':
+        'http://example.com/ontology#name':
+          [
+            { type: 'literal', value: 'John R. Smith' }
+            { type: 'literal', value: 'John Richard Smith' }
+          ]
+      'http://example.com/persons/andy':
+        'http://example.com/ontology#name':
+          [ { type: 'literal', value: 'Andy Smith' } ]
+
 
     it 'does insertion', ->
       snapshot = new RdfJsonDoc(testTriples)
@@ -84,6 +95,13 @@ describe 'sharejs-rdf-json', ->
 
       newSnapshot = rdfJson.apply(snapshot, op)
       expect(newSnapshot.exportTriples()).triplesToEqual afterDeletionShouldBe
+
+    it 'does insertion + deletion', ->
+      snapshot = new RdfJsonDoc(testTriples)
+      op = new RdfJsonOperation testInsertionTriples, testDeletionTriples
+
+      newSnapshot = rdfJson.apply(snapshot, op)
+      expect(newSnapshot.exportTriples()).triplesToEqual afterInsertionDeletionShouldBe
 
     it 'works with serialised snapshot', ->
       snapshot = new RdfJsonDoc(testTriples)
