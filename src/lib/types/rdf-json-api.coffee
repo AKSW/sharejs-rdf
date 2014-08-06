@@ -5,7 +5,7 @@ rdfJson = require './rdf-json' if typeof WEB is 'undefined'
 rdfJson.api =
   provides: { rdfJson: true }
 
-  getData: -> rdfJson.exportTriples(@snapshot._triples)
+  getData: -> rdfJson.exportTriples(@snapshot.triples)
 
   insert: (triples, callback) ->
     op = rdfJson.Operation.insert triples
@@ -27,4 +27,4 @@ rdfJson.api =
 
   _register: ->
     @on 'remoteop', (op) ->
-      @emit 'update', op._triplesAdd, op._triplesDel
+      @emit 'update', op.triplesAdd, op.triplesDel

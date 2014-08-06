@@ -164,38 +164,37 @@ exportTriplesDifference = (triplesMinuend, triplesSubtrahend) ->
 # ...
 class RdfJsonDoc
   constructor: (triples={}) ->
-    @_uriRegex = /^\w+:\/\/\w+(\.\w+)+\//
-    @_triples = {}
+    @triples = {}
     @insert triples
 
   @byInternalTripleSet: (triples) ->
     doc = new RdfJsonDoc
-    doc._triples = triples
+    doc.triples = triples
     return doc
 
-  exportTriples: -> exportTriples(@_triples)
+  exportTriples: -> exportTriples(@triples)
 
   clone: ->
     doc = new RdfJsonDoc
-    doc._triples = cloneTriples(@_triples)
+    doc.triples = cloneTriples(@triples)
     return doc
 
   insert: (triples) ->
     for subjectUri, predicates of triples
       @assertSubjectIsUri(subjectUri)
-      @_triples[subjectUri] = {} if !@_triples[subjectUri]
+      @triples[subjectUri] = {} if !@triples[subjectUri]
       for predicateUri, objects of predicates
         @assertPredicateIsUri(predicateUri, subjectUri)
         @assertObjectsArray(objects, subjectUri, predicateUri)
-        @_triples[subjectUri][predicateUri] = {} if !@_triples[subjectUri][predicateUri]
+        @triples[subjectUri][predicateUri] = {} if !@triples[subjectUri][predicateUri]
         for object in objects
           objectHash = hashTripleObject object
-          @_triples[subjectUri][predicateUri][objectHash] = object
+          @triples[subjectUri][predicateUri][objectHash] = object
 
   delete: (triples) ->
     for subjectUri, predicates of triples
       @assertSubjectIsUri(subjectUri)
-      continue if !@_triples[subjectUri]
+      continue if !@triples[subjectUri]
 
       predicateCount = 0
       for predicateUri, objects of predicates
@@ -203,22 +202,22 @@ class RdfJsonDoc
         @assertObjectsArray(objects, subjectUri, predicateUri)
         predicateCount++
 
-        continue if !@_triples[subjectUri][predicateUri]
-        presentObjects = @_triples[subjectUri][predicateUri]
+        continue if !@triples[subjectUri][predicateUri]
+        presentObjects = @triples[subjectUri][predicateUri]
 
         for objectToRemove in objects
           objectToRemoveHash = hashTripleObject objectToRemove
           if presentObjects[objectToRemoveHash]
-            delete @_triples[subjectUri][predicateUri][objectToRemoveHash]
+            delete @triples[subjectUri][predicateUri][objectToRemoveHash]
 
         objectCount = 0
         objectCount++ for presentObjectHash, presentObject of presentObjects
 
         if objectCount == 0
           predicateCount--
-          delete @_triples[subjectUri][predicateUri]
+          delete @triples[subjectUri][predicateUri]
 
-      delete @_triples[subjectUri] if predicateCount == 0
+      delete @triples[subjectUri] if predicateCount == 0
 
   assertSubjectIsUri: (subject) ->
     throw new Error("Subject must be an URI: #{subject}") if typeof subject != 'string' || !@isUri(subject)
@@ -231,7 +230,7 @@ class RdfJsonDoc
       throw new Error("Objects must be an array of objects: #{objects} (of subject #{subject}, predicate #{predicate})")
 
   isUri: (str) ->
-    str.match(@_uriRegex)
+    str.match(/^\w+:\/\/\w+(\.\w+)+\//)
 
 
 class RdfJsonOperation
@@ -243,19 +242,19 @@ class RdfJsonOperation
 
   # triples in export format
   constructor: (triplesToAdd, triplesToDelete) ->
-    @_triplesAdd = triplesToAdd
-    @_triplesDel = triplesToDelete
+    @triplesAdd = triplesToAdd
+    @triplesDel = triplesToDelete
 
   clone: ->
     new RdfJsonOperation(cloneExportTriples(@getTriplesToAdd()), cloneExportTriples(@getTriplesToDel()))
 
-  getTriplesToAdd: -> @_triplesAdd
-  setTriplesToAdd: (triples) -> @_triplesAdd = triples
-  hasTriplesToAdd: -> !@_triplesEmpty(@_triplesAdd)
+  getTriplesToAdd: -> @triplesAdd
+  setTriplesToAdd: (triples) -> @triplesAdd = triples
+  hasTriplesToAdd: -> !@_triplesEmpty(@triplesAdd)
 
-  getTriplesToDel: -> @_triplesDel
-  setTriplesToDel: (triples) -> @_triplesDel = triples
-  hasTriplesToDel: -> !@_triplesEmpty(@_triplesDel)
+  getTriplesToDel: -> @triplesDel
+  setTriplesToDel: (triples) -> @triplesDel = triples
+  hasTriplesToDel: -> !@_triplesEmpty(@triplesDel)
 
   _triplesEmpty: (triples) ->
     return false for k, v of triples
@@ -322,13 +321,13 @@ rdfJson =
 
   _ensureDoc: (doc) ->
     return doc if doc instanceof RdfJsonDoc
-    return RdfJsonDoc.byInternalTripleSet(doc._triples) if typeof doc == 'object' && doc._triples
+    return RdfJsonDoc.byInternalTripleSet(doc.triples) if typeof doc == 'object' && doc.triples
 
-    throw new Error("Snapshot must be a rdf-json document. Given: #{snapshot}")
+    throw new Error("Snapshot must be a rdf-json document. Given: #{doc}")
 
   _ensureOp: (op) ->
     return op if op instanceof RdfJsonOperation
-    return new RdfJsonOperation(op._triplesAdd, op._triplesDel) if typeof op == 'object' && op._triplesAdd && op._triplesDel
+    return new RdfJsonOperation(op.triplesAdd, op.triplesDel) if typeof op == 'object' && op.triplesAdd && op.triplesDel
 
     throw new Error("Operation must be a rdf-json operation. Given: #{op}")
 
