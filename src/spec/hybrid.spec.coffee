@@ -18,5 +18,12 @@ describe 'hybrid OT', ->
 
     rdfJsonIndex sharejs
 
-    expect(sharejs.types['turtle-rdf-json']).toBeDefined();
-    expect(sharejs.types['turtle-rdf-json']).toEqual(hybridOT);
+    expect(sharejs.types['turtle-rdf-json']).toBeDefined()
+    expect(sharejs.types['turtle-rdf-json']).toEqual hybridOT
+
+  it 'has working create method', ->
+    doc = hybridOT.create()
+
+    expect(doc instanceof HybridDoc).toBeTruthy()
+    expect(doc.getTurtleContent()).toEqual ''
+    expect(doc.getRdfJsonContent()).toEqual {}
