@@ -34,7 +34,7 @@ module.exports = (grunt) ->
       spec:
         expand: true
         cwd: 'src/spec'
-        src: ['**/*.spec.coffee']
+        src: ['*.spec.coffee']
         dest: 'spec'
         ext: '.spec.js'
       webspec:
@@ -55,6 +55,7 @@ module.exports = (grunt) ->
           'lib/web-prelude.js',
           'lib/types/rdf-json.js',
           'lib/types/rdf-json-api.js',
+          'lib/types/hybrid.js',
           'node_modules/spark-md5/spark-md5.js'
         ]
         dest: 'web/web.js'

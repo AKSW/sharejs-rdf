@@ -4,3 +4,4 @@ register = (file) ->
   try require "#{file}-api"
 
 register './rdf-json'
+register './hybrid'
