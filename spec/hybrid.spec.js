@@ -23,6 +23,10 @@
       expect(sharejs.types['turtle-rdf-json']).toBeDefined();
       return expect(sharejs.types['turtle-rdf-json']).toEqual(hybridOT);
     });
+    it('exports document & operation prototype', function() {
+      expect(hybridOT.doc).toBeFunction();
+      return expect(hybridOT.op).toBeFunction();
+    });
     it('has working create method', function() {
       var doc;
       doc = hybridOT.create();

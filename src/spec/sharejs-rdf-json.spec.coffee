@@ -21,6 +21,10 @@ describe 'sharejs-rdf-json', ->
     expect(sharejs.types['rdf-json']).toBeDefined();
     expect(sharejs.types['rdf-json']).toEqual(rdfJson);
 
+  it 'exports document & operation prototype', ->
+    expect(rdfJson.Doc).toBeFunction();
+    expect(rdfJson.Operation).toBeFunction();
+
 
   describe 'create method', ->
     doc = rdfJson.create()

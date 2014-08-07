@@ -23,6 +23,10 @@
       expect(sharejs.types['rdf-json']).toBeDefined();
       return expect(sharejs.types['rdf-json']).toEqual(rdfJson);
     });
+    it('exports document & operation prototype', function() {
+      expect(rdfJson.Doc).toBeFunction();
+      return expect(rdfJson.Operation).toBeFunction();
+    });
     describe('create method', function() {
       var doc;
       doc = rdfJson.create();

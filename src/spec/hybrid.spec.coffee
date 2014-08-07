@@ -21,6 +21,10 @@ describe 'hybrid OT', ->
     expect(sharejs.types['turtle-rdf-json']).toBeDefined()
     expect(sharejs.types['turtle-rdf-json']).toEqual hybridOT
 
+  it 'exports document & operation prototype', ->
+    expect(hybridOT.doc).toBeFunction();
+    expect(hybridOT.op).toBeFunction();
+
   it 'has working create method', ->
     doc = hybridOT.create()
 
