@@ -49,6 +49,12 @@ module.exports = (grunt) ->
         src: ['*.coffee']
         dest: 'spec/matchers'
         ext: '.js'
+    run:
+      options:
+        cwd: __dirname + '/node_modules/n3'
+      'n3-browser':
+        exec: 'npm install && npm run browser'
+
     concat:
       web:
         src: [
@@ -56,7 +62,8 @@ module.exports = (grunt) ->
           'lib/types/rdf-json.js',
           'lib/types/rdf-json-api.js',
           'lib/types/hybrid.js',
-          'node_modules/spark-md5/spark-md5.js'
+          'node_modules/spark-md5/spark-md5.js',
+          'node_modules/n3/browser/n3-browser.js'
         ]
         dest: 'web/web.js'
     uglify:
@@ -71,8 +78,8 @@ module.exports = (grunt) ->
   )
 
   grunt.registerTask 'server-test', ['coffee', 'jasmine_node']
-  grunt.registerTask 'web-create', ['coffee', 'concat:web', 'uglify:web']
+  grunt.registerTask 'web-create', ['coffee', 'run:n3-browser', 'concat:web', 'uglify:web']
   grunt.registerTask 'web-test', ['web-create', 'jasmine']
-  grunt.registerTask 'web', ['web-create', 'web-test']
+  grunt.registerTask 'web', ['web-test']
   grunt.registerTask 'test', ['server-test', 'web-test']
   grunt.registerTask 'default', ['test', 'web']
