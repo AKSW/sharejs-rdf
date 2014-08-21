@@ -1,5 +1,6 @@
 
-WEB = true if typeof window == 'object' && window.document
+rdf = null
+util = null
 
 rdfJsonOT = null
 textOT = null
@@ -58,12 +59,7 @@ hybridOT =
   create: () -> new HybridDoc('', {})
 
   apply: (snapshot, op) ->
-    snapshot = @_ensureDoc snapshot
-    op = @_ensureOp op
-
-    textDoc = textOT.apply snapshot.getTurtleContent(), op.getTextOps()
-    rdfOp = new rdfJsonOT.Operation op.getRdfInsertions(), op.getRdfDeletions()
-    rdfDoc = rdfJsonOT.apply snapshot.getRdfJsonDoc(), rdfOp
+    [textDoc, rdfDoc] = @syncDocuments snapshot, op
 
     return new HybridDoc textDoc, rdfDoc
 
@@ -74,6 +70,24 @@ hybridOT =
 
   # combine op1 and op2 to a single operation
   compose: (op1, op2) -> # TODO
+
+  # applies turtle and rdf/json changes to the snapshot and
+  # translates turtle <-> rdf/json operations, so that the
+  # documents stay synchronized
+  syncDocuments: (snapshot, op) ->
+    snapshot = @_ensureDoc snapshot
+    op = @_ensureOp op
+
+    textDocBefore = snapshot.getTurtleContent()
+    rdfDocBefore = snapshot.getRdfJsonDoc()
+
+    textDocAfter = textOT.apply snapshot.getTurtleContent(), op.getTextOps()
+    rdfOp = new rdfJsonOT.Operation op.getRdfInsertions(), op.getRdfDeletions()
+    rdfDocAfter = rdfJsonOT.apply snapshot.getRdfJsonDoc(), rdfOp
+
+    # TODO
+
+    [textDocAfter, rdfDocAfter]
 
   _ensureDoc: (doc) ->
     return doc if doc instanceof HybridDoc
@@ -93,10 +107,16 @@ if WEB?
   rdfJsonOT = sharejs.types['rdf-json']
   textOT = sharejs.types['text']
 
+  rdf = window.rdf
+  util = sharejs.rdfUtil
+
   sharejs.types ||= {}
   sharejs.types['turtle-rdf-json'] = hybridOT
 else
   textOT = require '../../node_modules/share/lib/types/text'
   rdfJsonOT = require './rdf-json'
+
+  rdf = require 'node-rdf'
+  util = require '../util'
 
   module.exports = hybridOT

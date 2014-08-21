@@ -1,6 +1,9 @@
 
-WEB = true if typeof window == 'object' && window.document
+SparkMD5 = null
+util = null
 
+
+# === Utility functions: ===
 
 md5 = (str) ->
   return SparkMD5.hash str
@@ -15,12 +18,7 @@ hashTripleObject = (obj) ->
   hashObject obj, ['type', 'value', 'lang', 'datatype']
 
 
-isTriplesEmpty = (triples) ->
-  return false for k, v of triples
-  return true
-
-
-cloneTriples = (triples) ->
+cloneInternalTriples = (triples) ->
   triplesClone = {}
 
   for subjUri, predicates of triples
@@ -35,21 +33,6 @@ cloneTriples = (triples) ->
 
   return triplesClone
 
-
-cloneExportTriples = (triples) ->
-  triplesClone = {}
-
-  for subjUri, predicates of triples
-    triplesClone[subjUri] = {}
-    for predUri, objects of predicates
-      triplesClone[subjUri][predUri] = []
-      for object in objects
-        objectClone = {}
-        for objKey, objValue of object
-          objectClone[objKey] = objValue
-        triplesClone[subjUri][predUri].push objectClone
-
-  return triplesClone
 
 exportTriples = (triples) ->
   _export = {}
@@ -69,88 +52,8 @@ exportTriples = (triples) ->
 
   return _export
 
-exportTriplesIntersect = (triples1, triples2) ->
-  intersect = {}
+# === End of utility functions: ===
 
-  for subjUri1, predicates1 of triples1
-    continue if !triples2[subjUri1]
-
-    for predUri1, objects1 of predicates1
-      continue if !triples2[subjUri1][predUri1]
-      objects2 = triples2[subjUri1][predUri1]
-      objects_intersect = []
-
-      for object1 in objects1
-        for object2 in objects2
-          if (object1.type  == object2.type &&
-              object1.value == object2.value &&
-              object1.lang  == object2.lang &&
-              object1.datatype == object2.datatype)
-            objects_intersect.push object1
-
-      if objects_intersect.length > 0
-        intersect[subjUri1] = {} if !intersect[subjUri1]
-        intersect[subjUri1][predUri1] = objects_intersect
-
-  return intersect
-
-
-exportTriplesUnion = (triples1, triples2) ->
-  union = {}
-
-  objectsArrayContains = (objects, newObject) ->
-    properties = ['type', 'value', 'lang', 'datatype']
-    for objects in objects
-      objectsMatch = true
-      for property in properties
-        if object[property] != newObject[property]
-          objectsMatch = false
-          break
-
-      return true if objectsMatch
-    return false
-
-  addToUnion = (s, p, o) ->
-    union[s] = {} if !union[s]
-    union[s][p] = [] if !union[s][p]
-    union[s][p].push o if !objectsArrayContains(union[s][p], o)
-
-  walkTriples = (triples, cb) ->
-    for subjUri, predicates of triples
-      for predUri, objects of predicates
-        for object in objects
-          cb(subjUri, predUri, object)
-
-  walkTriples triples1, addToUnion
-  walkTriples triples2, addToUnion
-
-  return union
-
-
-exportTriplesDifference = (triplesMinuend, triplesSubtrahend) ->
-  triplesDiff = {}
-
-  for subjUri, predicates of triplesMinuend
-    for predUri, objects of predicates
-      objectsDiff = []
-
-      if triplesSubtrahend[subjUri] && triplesSubtrahend[subjUri][predUri]
-        objects2 = triplesSubtrahend[subjUri][predUri]
-        for object1 in objects
-          for object2 in objects2
-            if (object1.type  != object2.type ||
-                object1.value != object2.value ||
-                object1.lang  != object2.lang ||
-                object1.datatype != object2.datatype)
-              objectsDiff.push object1
-      else
-        objectsDiff = objects
-
-      if objectsDiff.length > 0
-        triplesDiff[subjUri] = {} if !triplesDiff[subjUri]
-        triplesDiff[subjUri][predUri] = objectsDiff
-
-  return triplesDiff
 
 
 # triples export format: RDF/JSON - https://dvcs.w3.org/hg/rdf/raw-file/default/rdf-json/index.html
@@ -178,7 +81,7 @@ class RdfJsonDoc
 
   clone: ->
     doc = new RdfJsonDoc
-    doc.triples = cloneTriples(@triples)
+    doc.triples = cloneInternalTriples(@triples)
     return doc
 
   insert: (triples) ->
@@ -250,7 +153,7 @@ class RdfJsonOperation
     @triplesDel = triplesToDelete
 
   clone: ->
-    new RdfJsonOperation(cloneExportTriples(@getTriplesToAdd()), cloneExportTriples(@getTriplesToDel()))
+    new RdfJsonOperation(util.cloneTriples(@getTriplesToAdd()), util.cloneTriples(@getTriplesToDel()))
 
   getTriplesToAdd: -> @triplesAdd
   setTriplesToAdd: (triples) -> @triplesAdd = triples
@@ -269,7 +172,6 @@ class RdfJsonOperation
 rdfJson =
   Doc: RdfJsonDoc
   Operation: RdfJsonOperation
-  exportTriples: exportTriples
   name: 'rdf-json'
 
   create: -> new RdfJsonDoc
@@ -290,8 +192,8 @@ rdfJson =
   transform: (op1, op2, side) ->
 
     transformTriples = (op1Triples, op2Triples) ->
-      intersect = exportTriplesIntersect op1Triples, op2Triples
-      exportTriplesDifference op1Triples, intersect
+      intersect = util.triplesIntersect op1Triples, op2Triples
+      util.triplesDifference op1Triples, intersect
 
     op1t = op1.clone()
     op1First = side == 'right'
@@ -302,21 +204,21 @@ rdfJson =
     return op1t if op1First    # we are only modifying op1 if op2 is applied first
 
     # insertion + insertion or deletion + deletion is uncritical
-    return op1t if isTriplesEmpty(op1.getTriplesToAdd()) && isTriplesEmpty(op2.getTriplesToAdd())
-    return op1t if isTriplesEmpty(op1.getTriplesToDel()) && isTriplesEmpty(op2.getTriplesToDel())
+    return op1t if util.isTriplesEmpty(op1.getTriplesToAdd()) && util.isTriplesEmpty(op2.getTriplesToAdd())
+    return op1t if util.isTriplesEmpty(op1.getTriplesToDel()) && util.isTriplesEmpty(op2.getTriplesToDel())
 
-    op1t.setTriplesToAdd exportTriplesDifference( op1.getTriplesToAdd(), op2.getTriplesToDel() )
-    op1t.setTriplesToDel exportTriplesDifference( op1.getTriplesToDel(), op2.getTriplesToAdd() )
+    op1t.setTriplesToAdd util.triplesDifference( op1.getTriplesToAdd(), op2.getTriplesToDel() )
+    op1t.setTriplesToDel util.triplesDifference( op1.getTriplesToDel(), op2.getTriplesToAdd() )
 
     return op1t
 
   # combine op1 and op2 to a single operation
   compose: (op1, op2) ->
-    triplesToAddUnion = exportTriplesUnion op1.getTriplesToAdd(), op2.getTriplesToAdd()
-    triplesToDelUnion = exportTriplesUnion op1.getTriplesToDel(), op2.getTriplesToDel()
+    triplesToAddUnion = util.triplesUnion op1.getTriplesToAdd(), op2.getTriplesToAdd()
+    triplesToDelUnion = util.triplesUnion op1.getTriplesToDel(), op2.getTriplesToDel()
 
-    triplesToAdd = exportTriplesDifference triplesToAddUnion, triplesToDelUnion
-    triplesToDel = exportTriplesDifference triplesToDelUnion, triplesToAddUnion
+    triplesToAdd = util.triplesDifference triplesToAddUnion, triplesToDelUnion
+    triplesToDel = util.triplesDifference triplesToDelUnion, triplesToAddUnion
 
     new RdfJsonOperation(triplesToAdd, triplesToDel)
 
@@ -336,8 +238,12 @@ rdfJson =
 
 if WEB?
   sharejs = window.sharejs
+  util = sharejs.rdfUtil
+  SparkMD5 = window.SparkMD5
+
   sharejs.types ||= {}
   sharejs.types['rdf-json'] = rdfJson
 else
   SparkMD5 = require 'spark-md5'
+  util = require '../util'
   module.exports = rdfJson
