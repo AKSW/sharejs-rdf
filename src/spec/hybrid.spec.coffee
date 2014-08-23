@@ -70,7 +70,6 @@ describe 'hybrid OT', ->
 
       newSnapshot = hybridOT.apply snapshot, op
 
-      expect(newSnapshot.getTurtleContent()).toEqual ''
       expect(newSnapshot.getRdfJsonContent()).toEqual {
         'http://example.com/persons/john':
           'http://example.com/ontology#name':
@@ -96,9 +95,64 @@ describe 'hybrid OT', ->
 
       newSnapshot = hybridOT.apply snapshot, op
 
-      expect(newSnapshot.getTurtleContent()).toEqual 'Hello Test!'
+      expect(newSnapshot.getTurtleContent()).toEqual(
+        "Hello Test!\n"+
+        "### insert triple ### <http://example.com/persons/john> <http://example.com/ontology#name> \"John R. Smith\" .\n"+
+        "### delete triple ### <http://example.com/persons/john> <http://example.com/ontology#name> \"John Smith\" ."
+      )
       expect(newSnapshot.getRdfJsonContent()).toEqual {
         'http://example.com/persons/john':
           'http://example.com/ontology#name':
             [ { type: 'literal', value: 'John R. Smith' } ]
       }
+
+
+    it 'works with invalid turtle, rdf/json changes then valid turtle', ->
+      snapshot = new HybridDoc "http://example.com/persons/john> <http://example.com/ontology#age> \"36\" .\n"+
+                               "<http://example.com/persons/john> <http://example.com/ontology#name> \"John Smith\" .", {
+          'http://example.com/persons/john':
+            'http://example.com/ontology#name':
+              [ { type: 'literal', value: 'John Smith' } ]
+        }
+      op = new HybridOp [], {
+          'http://example.com/persons/john':
+            'http://example.com/ontology#name':
+              [ { type: 'literal', value: 'John R. Smith' } ]
+        }, {}
+      op2 = new HybridOp [{p: 0, i: '<'}], {
+          'http://example.com/persons/john':
+            'http://example.com/ontology#name':
+              [ { type: 'literal', value: 'John Richard Smith' } ]
+        }, {}
+
+      snapshot = hybridOT.apply snapshot, op
+
+      expect(snapshot.getTurtleContent()).toEqual(
+        "http://example.com/persons/john> <http://example.com/ontology#age> \"36\" .\n" +
+        "<http://example.com/persons/john> <http://example.com/ontology#name> \"John Smith\" .\n" +
+        "### insert triple ### <http://example.com/persons/john> <http://example.com/ontology#name> \"John R. Smith\" ."
+      )
+      expect(snapshot.getRdfJsonContent()).triplesToEqual {
+        'http://example.com/persons/john':
+          'http://example.com/ontology#name':
+            [ { type: 'literal', value: 'John Smith' }, { type: 'literal', value: 'John R. Smith' } ]
+      }
+
+      snapshot = hybridOT.apply snapshot, op2
+
+      expect(snapshot.getTurtleContent()).toEqual(
+        "<http://example.com/persons/john> <http://example.com/ontology#age> \"36\" .\n" +
+        "<http://example.com/persons/john> <http://example.com/ontology#name> \"John Smith\" .\n" +
+        "<http://example.com/persons/john> <http://example.com/ontology#name> \"John R. Smith\" .\n" +
+        "<http://example.com/persons/john> <http://example.com/ontology#name> \"John Richard Smith\" ."
+      )
+      expect(snapshot.getRdfJsonContent()).triplesToEqual {
+        'http://example.com/persons/john':
+          'http://example.com/ontology#name':
+            [ { type: 'literal', value: 'John Smith' }, { type: 'literal', value: 'John R. Smith' }, { type: 'literal', value: 'John Richard Smith' } ]
+          'http://example.com/ontology#age':
+            [ { type: 'literal', value: '36' } ]
+      }
+
+
+    # TODO: Test edge-case: turtle triple insertion + rdf/json deletion of the same triple and vice versa

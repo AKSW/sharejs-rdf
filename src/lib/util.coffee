@@ -49,7 +49,7 @@ util =
 
     objectsArrayContains = (objects, newObject) ->
       properties = ['type', 'value', 'lang', 'datatype']
-      for objects in objects
+      for object in objects
         objectsMatch = true
         for property in properties
           if object[property] != newObject[property]
@@ -98,6 +98,44 @@ util =
           triplesDiff[subjUri][predUri] = objectsDiff
 
     triplesDiff
+
+  # returns array of { s: <subjectUri>, p: <predicate Uri>, o: <object as in rdf-json> }
+  rdfJsonToArray: (rdfJson) ->
+    array = []
+
+    for subjUri, predicates of rdfJson
+      for predUri, objects of predicates
+        for object in objects
+          array.push { s: subjUri, p: predUri, o: object }
+
+    array
+
+  tripleToTurtle: (subjectUri, predicateUri, object) ->
+    switch object.type
+      when 'uri' then objectStr = '<' + encodeURI(object.value) + '>'
+      when 'bnode' then objectStr = '_:' + object.value
+      else
+        objectStr = '"' + escapeLiteralValue(object.value) + '"'
+        objectStr += '^^' + object.datatype if object.datatype
+        objectStr += '@' + object.lang if object.lang
+
+    '<' + encodeURI(subjectUri) + '> <' + encodeURI(predicateUri) + '> ' + objectStr + ' .'
+
+
+# === Utility stuff ===
+
+# Source: https://github.com/RubenVerborgh/N3.js/blob/master/lib/N3Writer.js
+# Characters in literals that require escaping
+literalEscape    = /["\\\t\n\r\b\f]/
+literalEscapeAll = /["\\\t\n\r\b\f]/g
+literalReplacements = { '\\': '\\\\', '"': '\\"', '\t': '\\t', '\n': '\\n', '\r': '\\r', '\b': '\\b', '\f': '\\f' }
+
+escapeLiteralValue = (value) ->
+  if literalEscape.test(value)
+    value = value.replace(literalEscapeAll, (match) -> literalReplacements[match])
+  value
+
+# === End of utility stuff ===
 
 
 if WEB?

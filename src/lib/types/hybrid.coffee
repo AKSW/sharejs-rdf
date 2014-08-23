@@ -6,6 +6,30 @@ rdfJsonOT = null
 textOT = null
 
 
+# === Utility functions: ===
+
+parserTriplesArrayToRdfJson = (triples) ->
+  createRdfJsonObject = (object) ->
+    objectType = 'literal'
+    objectType = 'uri' if object instanceof rdf.NamedNode
+    objectType = 'bnode' if object instanceof rdf.BlankNode
+
+    rdfJsonObject = { type: objectType, value: object.nominalValue }
+    rdfJsonObject.lang = object.language if object.language
+    rdfJsonObject.datatype = object.datatype if object.datatype
+    rdfJsonObject
+
+  rdfJson = {}
+  for triple in triples
+    rdfJson[triple.subject] = {} unless rdfJson[triple.subject]
+    rdfJson[triple.subject][triple.predicate] = [] unless rdfJson[triple.subject][triple.predicate]
+    rdfJson[triple.subject][triple.predicate].push createRdfJsonObject(triple.object)
+
+  return rdfJson
+
+# === End of utility functions ===
+
+
 class HybridDoc
   @fromData: (data) -> new HybridDoc data.turtleContent, rdfJsonOT.Doc.fromData(data.rdfJsonDoc)
 
@@ -85,9 +109,81 @@ hybridOT =
     rdfOp = new rdfJsonOT.Operation op.getRdfInsertions(), op.getRdfDeletions()
     rdfDocAfter = rdfJsonOT.apply snapshot.getRdfJsonDoc(), rdfOp
 
-    # TODO
+    textDocAfterParsed = @_parseTurtle textDocAfter
+
+    if textDocAfterParsed
+      inserted1 = util.triplesDifference textDocAfterParsed, rdfDocBefore.exportTriples()
+      inserted2 = util.triplesDifference textDocAfterParsed, rdfDocAfter.exportTriples()
+      triplesInsertedInTurtle = util.triplesIntersect inserted1, inserted2
+
+      deleted1 = util.triplesDifference rdfDocBefore.exportTriples(), textDocAfterParsed
+      deleted2 = util.triplesDifference rdfDocAfter.exportTriples(), textDocAfterParsed
+      triplesDeletedInTurtle = util.triplesIntersect deleted1, deleted2
+
+      triplesToInsertInTurtle = util.triplesDifference op.getRdfInsertions(), triplesInsertedInTurtle
+      triplesToDeleteInTurtle = util.triplesDifference op.getRdfDeletions(), triplesDeletedInTurtle
+
+      [textDocAfter, tripleToInsertPrevCommented, tripleToDeletePrevCommented] = @_processTurtleCommentedTripleOps textDocAfter
+      triplesInsertedInTurtle = util.triplesUnion tripleToInsertPrevCommented, triplesInsertedInTurtle
+      triplesToInsertInTurtle = util.triplesUnion tripleToInsertPrevCommented, triplesToInsertInTurtle
+      triplesDeletedInTurtle  = util.triplesUnion tripleToDeletePrevCommented, triplesDeletedInTurtle
+      triplesToDeleteInTurtle = util.triplesUnion tripleToDeletePrevCommented, triplesToDeleteInTurtle
+
+      triplesDeletedInTurtle = util.triplesDifference triplesDeletedInTurtle, tripleToInsertPrevCommented
+      triplesToDeleteInTurtle = util.triplesDifference triplesToDeleteInTurtle, tripleToInsertPrevCommented
+
+      textDocAfter = @_applyChangesToTurtle textDocAfter, textDocAfterParsed, triplesToInsertInTurtle, triplesToDeleteInTurtle
+      rdfDocAfter = @_applyChangesToRdf rdfDocAfter, triplesInsertedInTurtle, triplesDeletedInTurtle
+    else
+      textDocAfter = @_applyChangesToTurtle(textDocAfter, null, op.getRdfInsertions(), op.getRdfDeletions())
 
     [textDocAfter, rdfDocAfter]
+
+  _applyChangesToRdf: (rdfDoc, triplesToInsert, triplesToDelete) ->
+    rdfDoc.insert triplesToInsert
+    rdfDoc.delete triplesToDelete
+    rdfDoc
+
+  _applyChangesToTurtle: (turtleDoc, turtleDocParsed, triplesToInsert, triplesToDelete) ->
+    if turtleDocParsed
+      for triple in util.rdfJsonToArray triplesToInsert
+        turtleDoc += "\n" + util.tripleToTurtle(triple.s, triple.p, triple.o)
+
+      # TODO: Apply deletions
+    else
+      for triple in util.rdfJsonToArray(triplesToInsert)
+        turtleDoc += "\n### insert triple ### " + util.tripleToTurtle(triple.s, triple.p, triple.o)
+
+      for triple in util.rdfJsonToArray(triplesToDelete)
+        turtleDoc += "\n### delete triple ### " + util.tripleToTurtle(triple.s, triple.p, triple.o)
+
+    turtleDoc
+
+  _processTurtleCommentedTripleOps: (turtleDoc) ->
+    triplesToInsert = {}
+    triplesToDelete = {}
+
+    while matches = turtleDoc.match /\n### (insert|delete) triple ### ([^\n]+ \.)$/
+      rdfJsonTriple = @_parseTurtle matches[2]
+      switch matches[1]
+        when 'insert' then triplesToInsert = util.triplesUnion triplesToInsert, rdfJsonTriple
+        when 'delete' then triplesToDelete = util.triplesUnion triplesToDelete, rdfJsonTriple
+      turtleDoc = turtleDoc.replace matches[0], ''
+
+    [turtleDoc, triplesToInsert, triplesToDelete]
+
+  _parseTurtle: (turtleContents) ->
+    parser = new rdf.TurtleParser
+    parsedDoc = null
+
+    try
+      if parser.parse turtleContents
+        parsedDoc = parserTriplesArrayToRdfJson parser.graph.toArray()
+
+        for triple in parser.graph.toArray()
+          return null if !triple.subject.nominalValue || !triple.predicate.nominalValue
+
+    parsedDoc
 
   _ensureDoc: (doc) ->
     return doc if doc instanceof HybridDoc
