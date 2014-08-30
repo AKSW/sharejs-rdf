@@ -1,6 +1,16 @@
 
 rdf = null
 
+# === Utility functions ===
+
+objectsEqual = (o1, o2) ->
+  return false if o1.type != o2.type || o1.value != o2.value
+  return false if (o1.lang || o2.lang) && o1.lang != o2.lang
+  return false if (o1.datatype || o2.datatype) && o1.datatype != o2.datatype
+  return true
+
+# === End of utility functions ===
+
 util =
   isTriplesEmpty: (triples) ->
     return false for k, v of triples
@@ -84,12 +94,12 @@ util =
         if triplesSubtrahend[subjUri] && triplesSubtrahend[subjUri][predUri]
           objects2 = triplesSubtrahend[subjUri][predUri]
           for object1 in objects
+            object1IsIn2 = false
             for object2 in objects2
-              if (object1.type  != object2.type ||
-                  object1.value != object2.value ||
-                  object1.lang  != object2.lang ||
-                  object1.datatype != object2.datatype)
-                objectsDiff.push object1
+              if objectsEqual(object1, object2)
+                object1IsIn2 = true
+                break
+            objectsDiff.push object1 if !object1IsIn2
         else
           objectsDiff = objects
 
@@ -98,6 +108,14 @@ util =
           triplesDiff[subjUri][predUri] = objectsDiff
 
     triplesDiff
+
+  triplesContain: (triples, s, p, o) ->
+    return false if !triples[s] || !triples[s][p]
+
+    for object in triples[s][p]
+      return true if objectsEqual object, o
+
+    return false
 
   # returns array of { s: <subjectUri>, p: <predicate Uri>, o: <object as in rdf-json> }
   rdfJsonToArray: (rdfJson) ->
@@ -109,6 +127,12 @@ util =
           array.push { s: subjUri, p: predUri, o: object }
 
     array
+
+  rdfJsonToTurtle: (rdfJson) ->
+    turtleContent = ''
+    for triple in util.rdfJsonToArray rdfJson
+      turtleContent += util.tripleToTurtle(triple.s, triple.p, triple.o) + "\n"
+    turtleContent
 
   tripleToTurtle: (subjectUri, predicateUri, object) ->
     switch object.type
