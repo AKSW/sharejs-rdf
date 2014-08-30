@@ -384,7 +384,7 @@
         });
       });
       return describe('handles concurring, conflicting turtle and rdf/json operations', function() {
-        return it('(turtle insertion & rdf/json deletion)', function() {
+        it('(turtle insertion & rdf/json deletion)', function() {
           var op, rdfJson, snapshot, turtle;
           turtle = "<http://example.com/persons/john> <http://example.com/ontology#name> \"John Smith\" .";
           rdfJson = {
@@ -401,7 +401,7 @@
           op = new HybridOp([
             {
               p: 0,
-              i: "\n<http://example.com/persons/john> <http://example.com/ontology#name> \"John R. Smith\" ."
+              i: "<http://example.com/persons/john> <http://example.com/ontology#name> \"John R. Smith\" ."
             }
           ], {}, {
             'http://example.com/persons/john': {
@@ -415,6 +415,42 @@
           });
           snapshot = hybridOT.apply(snapshot, op);
           expect(snapshot.getTurtleContent()).toEqual(turtle);
+          return expect(snapshot.getRdfJsonContent()).triplesToEqual(rdfJson);
+        });
+        return it('(turtle deletion & rdf/json insertion)', function() {
+          var op, rdfJson, snapshot, turtle;
+          turtle = "<http://example.com/persons/john> <http://example.com/ontology#name> \"John Smith\", \"John R. Smith\" .";
+          rdfJson = {
+            'http://example.com/persons/john': {
+              'http://example.com/ontology#name': [
+                {
+                  type: 'literal',
+                  value: 'John Smith'
+                }, {
+                  type: 'literal',
+                  value: 'John R. Smith'
+                }
+              ]
+            }
+          };
+          snapshot = new HybridDoc(turtle, rdfJson);
+          op = new HybridOp([
+            {
+              p: 81,
+              d: ", \"John R. Smith\""
+            }
+          ], {
+            'http://example.com/persons/john': {
+              'http://example.com/ontology#name': [
+                {
+                  type: 'literal',
+                  value: 'John R. Smith'
+                }
+              ]
+            }
+          }, {});
+          snapshot = hybridOT.apply(snapshot, op);
+          expect(snapshot.getTurtleContent()).toEqual("<http://example.com/persons/john> <http://example.com/ontology#name> \"John Smith\" .\n" + "<http://example.com/persons/john> <http://example.com/ontology#name> \"John R. Smith\" .");
           return expect(snapshot.getRdfJsonContent()).triplesToEqual(rdfJson);
         });
       });

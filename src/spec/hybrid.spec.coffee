@@ -265,7 +265,7 @@ describe 'hybrid OT', ->
               [ { type: 'literal', value: 'John Smith' } ]
         snapshot = new HybridDoc turtle, rdfJson
 
-        op = new HybridOp [{p:0, i:"\n<http://example.com/persons/john> <http://example.com/ontology#name> \"John R. Smith\" ."}], {}, {
+        op = new HybridOp [{p:0, i:"<http://example.com/persons/john> <http://example.com/ontology#name> \"John R. Smith\" ."}], {}, {
           'http://example.com/persons/john':
             'http://example.com/ontology#name':
               [ { type: 'literal', value: 'John R. Smith' } ]
@@ -278,6 +278,30 @@ describe 'hybrid OT', ->
         #turtleParsed = parseTurtle snapshot.getTurtleContent()
         #expect(turtleParsed).triplesToEqual snapshot.getRdfJsonContent()
 
+      it '(turtle deletion & rdf/json insertion)', () ->
 
-    # TODO: Test edge-case: turtle triple insertion + rdf/json deletion of the same triple and vice versa
+        turtle = "<http://example.com/persons/john> <http://example.com/ontology#name> \"John Smith\", \"John R. Smith\" ."
+        rdfJson =
+          'http://example.com/persons/john':
+            'http://example.com/ontology#name':
+              [ { type: 'literal', value: 'John Smith' }, { type: 'literal', value: 'John R. Smith' } ]
+        snapshot = new HybridDoc turtle, rdfJson
+
+        op = new HybridOp [{p:81, d:", \"John R. Smith\""}], {
+          'http://example.com/persons/john':
+            'http://example.com/ontology#name':
+              [ { type: 'literal', value: 'John R. Smith' } ]
+        }, {}
+
+        snapshot = hybridOT.apply snapshot, op
+
+        expect(snapshot.getTurtleContent()).toEqual(
+          "<http://example.com/persons/john> <http://example.com/ontology#name> \"John Smith\" .\n" +
+          "<http://example.com/persons/john> <http://example.com/ontology#name> \"John R. Smith\" ."
+        )
+        expect(snapshot.getRdfJsonContent()).triplesToEqual rdfJson
+        #turtleParsed = parseTurtle snapshot.getTurtleContent()
+        #expect(turtleParsed).triplesToEqual snapshot.getRdfJsonContent()
+
+
     # TODO: Test insertion/deletion of blank node triples (IS THIS POSSIBLE AT ALL??)

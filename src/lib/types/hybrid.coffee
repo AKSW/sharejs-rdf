@@ -184,10 +184,16 @@ hybridOT =
     deleted2 = util.triplesDifference rdfDocAfter.exportTriples(), textDocAfterParsed
     triplesDeletedInTurtle = util.triplesIntersect deleted1, deleted2
 
-    # TODO: eliminate equal triples in triplesInsertedInTurtle & op.getRdfDeletions(), triplesDeletedInTurtle & op.getRdfInsertions()
+    [op, triplesInsertedInTurtle, triplesDeletedInTurtle, revertTurtleInsertions, revertTurtleDeletions] =
+      @_eliminateOppositions op, triplesInsertedInTurtle, triplesDeletedInTurtle
+
+    # Problem: No matter what we eliminate, the op's turtle changes have already been made
+    # Solution: Let's undo these changes
 
     triplesToInsertInTurtle = util.triplesDifference op.getRdfInsertions(), triplesInsertedInTurtle
+    triplesToInsertInTurtle = util.triplesUnion triplesToInsertInTurtle, revertTurtleDeletions
     triplesToDeleteInTurtle = util.triplesDifference op.getRdfDeletions(), triplesDeletedInTurtle
+    triplesToDeleteInTurtle = util.triplesUnion triplesToDeleteInTurtle, revertTurtleInsertions
 
     textDocAfter = @_applyChangesToTurtle textDocAfter, textDocAfterParsed, triplesToInsertInTurtle, triplesToDeleteInTurtle
     rdfDocAfter = @_applyChangesToRdf rdfDocAfter, triplesInsertedInTurtle, triplesDeletedInTurtle
@@ -214,6 +220,24 @@ hybridOT =
         turtleDoc += "\n### delete triple ### " + util.tripleToTurtle(triple.s, triple.p, triple.o)
 
     turtleDoc
+
+  _eliminateOppositions: (op, turtleInsertions, turtleDeletions) ->
+    revertTurtleInsertions = {}
+    revertTurtleDeletions = {}
+
+    intersection = util.triplesIntersect op.getRdfInsertions(), turtleDeletions
+    if !util.isTriplesEmpty(intersection)
+      op.setRdfInsertions util.triplesDifference(op.getRdfInsertions(), intersection)
+      turtleDeletions = util.triplesDifference turtleDeletions, intersection
+      revertTurtleDeletions = intersection
+
+    intersection = util.triplesIntersect op.getRdfDeletions(), turtleInsertions
+    if !util.isTriplesEmpty(intersection)
+      op.setRdfDeletions util.triplesDifference(op.getRdfDeletions(), intersection)
+      turtleInsertions = util.triplesDifference turtleInsertions, intersection
+      revertTurtleInsertions = intersection
+
+    [op, turtleInsertions, turtleDeletions, revertTurtleInsertions, revertTurtleDeletions]
 
   _processTurtleCommentedTripleOps: (turtleDoc) ->
     triplesToInsert = {}
