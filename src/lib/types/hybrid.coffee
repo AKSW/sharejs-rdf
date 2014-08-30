@@ -166,7 +166,7 @@ hybridOT =
     rdfOp = new rdfJsonOT.Operation op.getRdfInsertions(), op.getRdfDeletions()
     rdfDocAfter = rdfJsonOT.apply snapshot.getRdfJsonDoc(), rdfOp
 
-    textDocAfterParsed = @_parseTurtle textDocAfter
+    [textDocAfter, textDocAfterParsed] = @_parseTurtleAndCommentedTripleOps textDocAfter
 
     if textDocAfterParsed
       [textDocAfter, rdfDocAfter] = @_applyTurtleChanges op, rdfDocBefore, rdfDocAfter, textDocAfter, textDocAfterParsed
@@ -184,17 +184,10 @@ hybridOT =
     deleted2 = util.triplesDifference rdfDocAfter.exportTriples(), textDocAfterParsed
     triplesDeletedInTurtle = util.triplesIntersect deleted1, deleted2
 
+    # TODO: eliminate equal triples in triplesInsertedInTurtle & op.getRdfDeletions(), triplesDeletedInTurtle & op.getRdfInsertions()
+
     triplesToInsertInTurtle = util.triplesDifference op.getRdfInsertions(), triplesInsertedInTurtle
     triplesToDeleteInTurtle = util.triplesDifference op.getRdfDeletions(), triplesDeletedInTurtle
-
-    [textDocAfter, tripleToInsertPrevCommented, tripleToDeletePrevCommented] = @_processTurtleCommentedTripleOps textDocAfter
-    triplesInsertedInTurtle = util.triplesUnion tripleToInsertPrevCommented, triplesInsertedInTurtle
-    triplesToInsertInTurtle = util.triplesUnion tripleToInsertPrevCommented, triplesToInsertInTurtle
-    triplesDeletedInTurtle  = util.triplesUnion tripleToDeletePrevCommented, triplesDeletedInTurtle
-    triplesToDeleteInTurtle = util.triplesUnion tripleToDeletePrevCommented, triplesToDeleteInTurtle
-
-    triplesDeletedInTurtle = util.triplesDifference triplesDeletedInTurtle, tripleToInsertPrevCommented
-    triplesToDeleteInTurtle = util.triplesDifference triplesToDeleteInTurtle, tripleToInsertPrevCommented
 
     textDocAfter = @_applyChangesToTurtle textDocAfter, textDocAfterParsed, triplesToInsertInTurtle, triplesToDeleteInTurtle
     rdfDocAfter = @_applyChangesToRdf rdfDocAfter, triplesInsertedInTurtle, triplesDeletedInTurtle
@@ -234,6 +227,17 @@ hybridOT =
       turtleDoc = turtleDoc.replace matches[0], ''
 
     [turtleDoc, triplesToInsert, triplesToDelete]
+
+  _parseTurtleAndCommentedTripleOps: (turtleDoc) ->
+    _turtleDoc = turtleDoc
+    [turtleDoc, triplesToInsert, triplesToDelete] = @_processTurtleCommentedTripleOps turtleDoc
+
+    if !util.isTriplesEmpty(triplesToInsert) || !util.isTriplesEmpty(triplesToDelete)
+      turtleDocParsed = @_parseTurtle turtleDoc
+      if turtleDocParsed
+        turtleDoc = @_applyChangesToTurtle turtleDoc, turtleDocParsed, triplesToInsert, triplesToDelete
+
+    return [turtleDoc, @_parseTurtle turtleDoc]
 
   _parseTurtle: (turtleContents) ->
     parser = new rdf.TurtleParser
