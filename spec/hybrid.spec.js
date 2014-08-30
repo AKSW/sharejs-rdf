@@ -1,5 +1,5 @@
 (function() {
-  var HybridDoc, HybridOp, hybridOT;
+  var HybridDoc, HybridOp, hybridOT, parseTurtle, parserTriplesArrayToRdfJson, rdf;
 
   require('jasmine-expect');
 
@@ -10,6 +10,62 @@
   HybridDoc = hybridOT.doc;
 
   HybridOp = hybridOT.op;
+
+  rdf = require('node-rdf');
+
+  parserTriplesArrayToRdfJson = function(triples) {
+    var createRdfJsonObject, rdfJson, triple, _i, _len;
+    createRdfJsonObject = function(object) {
+      var objectType, rdfJsonObject;
+      objectType = 'literal';
+      if (object instanceof rdf.NamedNode) {
+        objectType = 'uri';
+      }
+      if (object instanceof rdf.BlankNode) {
+        objectType = 'bnode';
+      }
+      rdfJsonObject = {
+        type: objectType,
+        value: object.nominalValue
+      };
+      if (object.language) {
+        rdfJsonObject.lang = object.language;
+      }
+      if (object.datatype) {
+        rdfJsonObject.datatype = object.datatype;
+      }
+      return rdfJsonObject;
+    };
+    rdfJson = {};
+    for (_i = 0, _len = triples.length; _i < _len; _i++) {
+      triple = triples[_i];
+      if (!rdfJson[triple.subject]) {
+        rdfJson[triple.subject] = {};
+      }
+      if (!rdfJson[triple.subject][triple.predicate]) {
+        rdfJson[triple.subject][triple.predicate] = [];
+      }
+      rdfJson[triple.subject][triple.predicate].push(createRdfJsonObject(triple.object));
+    }
+    return rdfJson;
+  };
+
+  parseTurtle = function(turtle) {
+    var parsedDoc, parser, triple, _i, _len, _ref;
+    parser = new rdf.TurtleParser;
+    parsedDoc = null;
+    try {
+      parsedDoc = parserTriplesArrayToRdfJson(parser.graph.toArray());
+      _ref = parser.graph.toArray();
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        triple = _ref[_i];
+        if (!triple.subject.nominalValue || !triple.predicate.nominalValue) {
+          return [null, parser];
+        }
+      }
+    } catch (_error) {}
+    return parsedDoc;
+  };
 
   describe('hybrid OT', function() {
     it('is named "turtle-rdf-json"', function() {
@@ -154,7 +210,7 @@
           }
         });
       });
-      return it('works with invalid turtle, rdf/json changes then valid turtle', function() {
+      it('works with invalid turtle, rdf/json insertions then valid turtle', function() {
         var op, op2, snapshot;
         snapshot = new HybridDoc("http://example.com/persons/john> <http://example.com/ontology#age> \"36\" .\n" + "<http://example.com/persons/john> <http://example.com/ontology#name> \"John Smith\" .", {
           'http://example.com/persons/john': {
@@ -229,6 +285,137 @@
               }
             ]
           }
+        });
+      });
+      it('works with invalid turtle, rdf/json deletions then valid turtle', function() {
+        var op, op2, snapshot, turtle;
+        turtle = "\nhttp://example.com/persons/john> <http://example.com/ontology#name> \"John Smith\", \"John R. Smith\" ;\n" + "                                  <http://example.com/ontology#name> \"John Richard Smith\" .\n" + "\n" + "<http://example.com/persons/andy>   <http://example.com/ontology#name>   \"Andy Smith\" .";
+        snapshot = new HybridDoc(turtle, {
+          'http://example.com/persons/john': {
+            'http://example.com/ontology#name': [
+              {
+                type: 'literal',
+                value: 'John Smith'
+              }, {
+                type: 'literal',
+                value: 'John R. Smith'
+              }, {
+                type: 'literal',
+                value: 'John Richard Smith'
+              }
+            ]
+          },
+          'http://example.com/persons/andy': {
+            'http://example.com/ontology#name': [
+              {
+                type: 'literal',
+                value: 'Andy Smith'
+              }
+            ]
+          }
+        });
+        op = new HybridOp([], {}, {
+          'http://example.com/persons/john': {
+            'http://example.com/ontology#name': [
+              {
+                type: 'literal',
+                value: 'John R. Smith'
+              }
+            ]
+          }
+        });
+        op2 = new HybridOp([
+          {
+            p: 1,
+            i: '<'
+          }
+        ], {}, {
+          'http://example.com/persons/john': {
+            'http://example.com/ontology#name': [
+              {
+                type: 'literal',
+                value: 'John Richard Smith'
+              }
+            ]
+          }
+        });
+        snapshot = hybridOT.apply(snapshot, op);
+        expect(snapshot.getTurtleContent()).toEqual(turtle + "\n" + "### delete triple ### <http://example.com/persons/john> <http://example.com/ontology#name> \"John R. Smith\" .");
+        expect(snapshot.getRdfJsonContent()).triplesToEqual({
+          'http://example.com/persons/john': {
+            'http://example.com/ontology#name': [
+              {
+                type: 'literal',
+                value: 'John Smith'
+              }, {
+                type: 'literal',
+                value: 'John Richard Smith'
+              }
+            ]
+          },
+          'http://example.com/persons/andy': {
+            'http://example.com/ontology#name': [
+              {
+                type: 'literal',
+                value: 'Andy Smith'
+              }
+            ]
+          }
+        });
+        snapshot = hybridOT.apply(snapshot, op2);
+        expect(snapshot.getTurtleContent()).toEqual("\n<http://example.com/persons/john> <http://example.com/ontology#name> \"John Smith\" .\n" + "\n" + "<http://example.com/persons/andy>   <http://example.com/ontology#name>   \"Andy Smith\" .");
+        return expect(snapshot.getRdfJsonContent()).triplesToEqual({
+          'http://example.com/persons/john': {
+            'http://example.com/ontology#name': [
+              {
+                type: 'literal',
+                value: 'John Smith'
+              }
+            ]
+          },
+          'http://example.com/persons/andy': {
+            'http://example.com/ontology#name': [
+              {
+                type: 'literal',
+                value: 'Andy Smith'
+              }
+            ]
+          }
+        });
+      });
+      return describe('handles concurring, conflicting turtle and rdf/json operations', function() {
+        return it('(turtle insertion & rdf/json deletion)', function() {
+          var op, rdfJson, snapshot, turtle;
+          turtle = "<http://example.com/persons/john> <http://example.com/ontology#name> \"John Smith\" .";
+          rdfJson = {
+            'http://example.com/persons/john': {
+              'http://example.com/ontology#name': [
+                {
+                  type: 'literal',
+                  value: 'John Smith'
+                }
+              ]
+            }
+          };
+          snapshot = new HybridDoc(turtle, rdfJson);
+          op = new HybridOp([
+            {
+              p: 0,
+              i: "\n<http://example.com/persons/john> <http://example.com/ontology#name> \"John R. Smith\" ."
+            }
+          ], {}, {
+            'http://example.com/persons/john': {
+              'http://example.com/ontology#name': [
+                {
+                  type: 'literal',
+                  value: 'John R. Smith'
+                }
+              ]
+            }
+          });
+          snapshot = hybridOT.apply(snapshot, op);
+          expect(snapshot.getTurtleContent()).toEqual(turtle);
+          return expect(snapshot.getRdfJsonContent()).triplesToEqual(rdfJson);
         });
       });
     });

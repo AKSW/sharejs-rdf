@@ -1641,6 +1641,7 @@ function Turtle(environment) {
 	this.processor = null;
 	this.quick = null;
 	this.graph = null;
+	this.blocks = [];
 };
 parsers.Turtle = Turtle;
 
@@ -1671,11 +1672,25 @@ Turtle.prototype.process = function(doc, processor, filter) {
 };
 Turtle.prototype.t = function t(){ return {o:null} };
 Turtle.prototype.parseStatements = function(s) {
+	var self = this;
+	self.blocks = [];
 	s = s.toString();
+	var originalLength = s.length;
 	while(s.length > 0) {
 		s = this.skipWS(s);
 		if(s.length == 0) return true;
-		s = (s.charAt(0)=="@" || s.substring(0,4).toUpperCase()=='BASE' || s.substring(0,6).toUpperCase()=='PREFIX') ? this.consumeDirective(s) : this.consumeStatement(s);
+		var type, subject, offset = originalLength - s.length;
+		if(s.charAt(0)=="@" || s.substring(0,4).toUpperCase()=='BASE' || s.substring(0,6).toUpperCase()=='PREFIX') {
+			s = this.consumeDirective(s);
+			type = 'directive';
+		} else {
+			var t = this.t();
+			this.consumeStatementSubject(s, t);
+			s = this.consumeStatement(s);
+			subject = t.o.toCanonical();
+			type = 'statement';
+		}
+		self.blocks.push({ type: type, subject: subject, start: offset, length: originalLength - s.length - offset });
 		s = this.skipWS(s);
 	}
 	return true;
@@ -1901,8 +1916,7 @@ Turtle.prototype.consumeQName = function(s, t) {
 	t.o = env.createNamedNode(this.environment.resolve(qname));
 	return s.slice(qname.length);
 };
-Turtle.prototype.consumeStatement = function(s) {
-	var t = this.t();
+Turtle.prototype.consumeStatementSubject = function(s, t) {
 	switch(s.charAt(0)) {
 		case "[":
 			s = this.consumeBlankNode(s, t);
@@ -1913,6 +1927,11 @@ Turtle.prototype.consumeStatement = function(s) {
 		case "<": s = this.consumeURI(s, t); break;
 		default: s = this.consumeQName(s, t); break;
 	}
+	return s;
+};
+Turtle.prototype.consumeStatement = function(s) {
+	var t = this.t();
+	s = this.consumeStatementSubject(s, t);
 	s = this.consumePredicateObjectList(this.skipWS(s), t);
 	this.expect(s, ".");
 	return s.slice(1);
@@ -3355,7 +3374,7 @@ rdfJson.api = {
   }
 };
 
-var HybridDoc, HybridOp, hybridOT, parserTriplesArrayToRdfJson, rdf, rdfJsonOT, sharejs, textOT, util;
+var HybridDoc, HybridOp, arrayFilter, hybridOT, mapTurtleToBlocks, parserTriplesArrayToRdfJson, rdf, rdfJsonOT, removeTripleFromTurtle, removeTripleFromTurtleBlock, sharejs, textOT, util;
 
 rdf = null;
 
@@ -3400,6 +3419,77 @@ parserTriplesArrayToRdfJson = function(triples) {
     rdfJson[triple.subject][triple.predicate].push(createRdfJsonObject(triple.object));
   }
   return rdfJson;
+};
+
+mapTurtleToBlocks = function(turtleContent) {
+  var blocks, parser;
+  blocks = [];
+  parser = new rdf.TurtleParser;
+  try {
+    if (parser.parse(turtleContent)) {
+      blocks = parser.blocks;
+    }
+  } catch (_error) {}
+  return blocks;
+};
+
+arrayFilter = function(array, callback) {
+  var item, resultArray, _i, _len;
+  resultArray = [];
+  for (_i = 0, _len = array.length; _i < _len; _i++) {
+    item = array[_i];
+    if (callback(item)) {
+      resultArray.push(item);
+    }
+  }
+  return resultArray;
+};
+
+removeTripleFromTurtleBlock = function(turtleContent, block, blockContentParsed, s, p, o) {
+  var blockStringified, end, start, tripleRdfJson;
+  tripleRdfJson = {};
+  tripleRdfJson[s] = {};
+  tripleRdfJson[s][p] = [o];
+  blockContentParsed = util.triplesDifference(blockContentParsed, tripleRdfJson);
+  blockStringified = util.rdfJsonToTurtle(blockContentParsed);
+  start = block.start;
+  end = block.start + block.length - 1;
+  if (turtleContent.substr(end + 1, 2) === "\r\n") {
+    end += 2;
+  } else {
+    if (turtleContent.charAt(end + 1) === "\n") {
+      end++;
+    }
+  }
+  return turtleContent = turtleContent.substr(0, start) + blockStringified + turtleContent.substr(end + 1);
+};
+
+removeTripleFromTurtle = function(turtleContent, s, p, o) {
+  var block, blockContent, blockParsed, blocks, potentialBlocks, successfulDeletion, _i, _len, _s;
+  if (s.substr(0, 2) !== "_:") {
+    _s = "<" + s + ">";
+  } else {
+    _s = s;
+  }
+  blocks = mapTurtleToBlocks(turtleContent);
+  potentialBlocks = arrayFilter(blocks, function(block) {
+    return block.subject === _s;
+  });
+  successfulDeletion = false;
+  for (_i = 0, _len = potentialBlocks.length; _i < _len; _i++) {
+    block = potentialBlocks[_i];
+    blockContent = turtleContent.substr(block.start, block.length);
+    blockParsed = hybridOT._parseTurtle(blockContent);
+    if (util.triplesContain(blockParsed, s, p, o)) {
+      turtleContent = removeTripleFromTurtleBlock(turtleContent, block, blockParsed, s, p, o);
+      successfulDeletion = true;
+      break;
+    }
+  }
+  if (!successfulDeletion) {
+    console.warn('Unable to find the triple (s: <' + s + '>, p: <' + p + '>, o: ' + JSON.stringify(o) + ') for deletion in: ' + turtleContent);
+  }
+  return turtleContent;
 };
 
 HybridDoc = (function() {
@@ -3537,27 +3627,33 @@ hybridOT = {
     return [textDocAfter, rdfDocAfter];
   },
   _applyChangesToRdf: function(rdfDoc, triplesToInsert, triplesToDelete) {
-    rdfDoc.insert(triplesToInsert);
-    rdfDoc["delete"](triplesToDelete);
+    var rdfOp;
+    rdfOp = new rdfJsonOT.Operation(triplesToInsert, triplesToDelete);
+    rdfDoc = rdfJsonOT.apply(rdfDoc, rdfOp);
     return rdfDoc;
   },
   _applyChangesToTurtle: function(turtleDoc, turtleDocParsed, triplesToInsert, triplesToDelete) {
-    var triple, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2;
+    var triple, _i, _j, _k, _l, _len, _len1, _len2, _len3, _ref, _ref1, _ref2, _ref3;
     if (turtleDocParsed) {
       _ref = util.rdfJsonToArray(triplesToInsert);
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         triple = _ref[_i];
         turtleDoc += "\n" + util.tripleToTurtle(triple.s, triple.p, triple.o);
       }
-    } else {
-      _ref1 = util.rdfJsonToArray(triplesToInsert);
+      _ref1 = util.rdfJsonToArray(triplesToDelete);
       for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
         triple = _ref1[_j];
-        turtleDoc += "\n### insert triple ### " + util.tripleToTurtle(triple.s, triple.p, triple.o);
+        turtleDoc = removeTripleFromTurtle(turtleDoc, triple.s, triple.p, triple.o);
       }
-      _ref2 = util.rdfJsonToArray(triplesToDelete);
+    } else {
+      _ref2 = util.rdfJsonToArray(triplesToInsert);
       for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
         triple = _ref2[_k];
+        turtleDoc += "\n### insert triple ### " + util.tripleToTurtle(triple.s, triple.p, triple.o);
+      }
+      _ref3 = util.rdfJsonToArray(triplesToDelete);
+      for (_l = 0, _len3 = _ref3.length; _l < _len3; _l++) {
+        triple = _ref3[_l];
         turtleDoc += "\n### delete triple ### " + util.tripleToTurtle(triple.s, triple.p, triple.o);
       }
     }
@@ -3591,7 +3687,7 @@ hybridOT = {
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           triple = _ref[_i];
           if (!triple.subject.nominalValue || !triple.predicate.nominalValue) {
-            return null;
+            return [null, parser];
           }
         }
       }
