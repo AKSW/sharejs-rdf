@@ -303,5 +303,56 @@ describe 'hybrid OT', ->
         #turtleParsed = parseTurtle snapshot.getTurtleContent()
         #expect(turtleParsed).triplesToEqual snapshot.getRdfJsonContent()
 
+  describe 'compose method', ->
+
+    it 'works for rdf & text insertions/deletions', ->
+
+      turtle = "<http://example.com/persons/john> <http://example.com/ontology#name> \"John Smith\" ."
+      rdfJson =
+        'http://example.com/persons/john':
+          'http://example.com/ontology#name':
+            [ { type: 'literal', value: 'John Smith' } ]
+      snapshot = new HybridDoc turtle, rdfJson
+
+      op1 = new HybridOp(
+        [ {p:0, d:"<http://example.com/persons/john> <http://example.com/ontology#name> \"John Smith\" ."} ],
+        { },
+        {
+          'http://example.com/persons/john':
+            'http://example.com/ontology#name':
+              [ { type: 'literal', value: 'John Smith' } ]
+        }
+      )
+      op2 = new HybridOp(
+        [ {p:0, i:"<http://example.com/persons/john> <http://example.com/ontology#name> \"John R. Smith\" ."} ],
+        {
+          'http://example.com/persons/john':
+            'http://example.com/ontology#name':
+              [ { type: 'literal', value: 'John R. Smith' } ]
+        },
+        { }
+      )
+
+      composedTextOpsShouldBe = [
+          {p:0, d:"<http://example.com/persons/john> <http://example.com/ontology#name> \"John Smith\" ."},
+          {p:0, i:"<http://example.com/persons/john> <http://example.com/ontology#name> \"John R. Smith\" ."}
+        ]
+      composedRdfInsShouldBe = {
+        'http://example.com/persons/john':
+          'http://example.com/ontology#name':
+            [ { type: 'literal', value: 'John R. Smith' } ]
+        }
+      composedRdfDelShouldBe = {
+        'http://example.com/persons/john':
+          'http://example.com/ontology#name':
+            [ { type: 'literal', value: 'John Smith' } ]
+        }
+
+      composedOp = hybridOT.compose op1, op2
+
+      expect(composedOp.getTextOps()).toEqual composedTextOpsShouldBe
+      expect(composedOp.getRdfInsertions()).triplesToEqual composedRdfInsShouldBe
+      expect(composedOp.getRdfDeletions()).triplesToEqual composedRdfDelShouldBe
+
 
     # TODO: Test insertion/deletion of blank node triples (IS THIS POSSIBLE AT ALL??)

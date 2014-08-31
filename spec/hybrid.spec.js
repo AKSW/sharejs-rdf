@@ -90,7 +90,7 @@
       expect(doc.getTurtleContent()).toEqual('');
       return expect(doc.getRdfJsonContent()).toEqual({});
     });
-    return describe('apply method', function() {
+    describe('apply method', function() {
       it('works with empty operation', function() {
         var newSnapshot, op, snapshot;
         snapshot = hybridOT.create();
@@ -453,6 +453,86 @@
           expect(snapshot.getTurtleContent()).toEqual("<http://example.com/persons/john> <http://example.com/ontology#name> \"John Smith\" .\n" + "<http://example.com/persons/john> <http://example.com/ontology#name> \"John R. Smith\" .");
           return expect(snapshot.getRdfJsonContent()).triplesToEqual(rdfJson);
         });
+      });
+    });
+    return describe('compose method', function() {
+      return it('works for rdf & text insertions/deletions', function() {
+        var composedOp, composedRdfDelShouldBe, composedRdfInsShouldBe, composedTextOpsShouldBe, op1, op2, rdfJson, snapshot, turtle;
+        turtle = "<http://example.com/persons/john> <http://example.com/ontology#name> \"John Smith\" .";
+        rdfJson = {
+          'http://example.com/persons/john': {
+            'http://example.com/ontology#name': [
+              {
+                type: 'literal',
+                value: 'John Smith'
+              }
+            ]
+          }
+        };
+        snapshot = new HybridDoc(turtle, rdfJson);
+        op1 = new HybridOp([
+          {
+            p: 0,
+            d: "<http://example.com/persons/john> <http://example.com/ontology#name> \"John Smith\" ."
+          }
+        ], {}, {
+          'http://example.com/persons/john': {
+            'http://example.com/ontology#name': [
+              {
+                type: 'literal',
+                value: 'John Smith'
+              }
+            ]
+          }
+        });
+        op2 = new HybridOp([
+          {
+            p: 0,
+            i: "<http://example.com/persons/john> <http://example.com/ontology#name> \"John R. Smith\" ."
+          }
+        ], {
+          'http://example.com/persons/john': {
+            'http://example.com/ontology#name': [
+              {
+                type: 'literal',
+                value: 'John R. Smith'
+              }
+            ]
+          }
+        }, {});
+        composedTextOpsShouldBe = [
+          {
+            p: 0,
+            d: "<http://example.com/persons/john> <http://example.com/ontology#name> \"John Smith\" ."
+          }, {
+            p: 0,
+            i: "<http://example.com/persons/john> <http://example.com/ontology#name> \"John R. Smith\" ."
+          }
+        ];
+        composedRdfInsShouldBe = {
+          'http://example.com/persons/john': {
+            'http://example.com/ontology#name': [
+              {
+                type: 'literal',
+                value: 'John R. Smith'
+              }
+            ]
+          }
+        };
+        composedRdfDelShouldBe = {
+          'http://example.com/persons/john': {
+            'http://example.com/ontology#name': [
+              {
+                type: 'literal',
+                value: 'John Smith'
+              }
+            ]
+          }
+        };
+        composedOp = hybridOT.compose(op1, op2);
+        expect(composedOp.getTextOps()).toEqual(composedTextOpsShouldBe);
+        expect(composedOp.getRdfInsertions()).triplesToEqual(composedRdfInsShouldBe);
+        return expect(composedOp.getRdfDeletions()).triplesToEqual(composedRdfDelShouldBe);
       });
     });
   });

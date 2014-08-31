@@ -3592,7 +3592,14 @@ hybridOT = {
     return new HybridDoc(textDoc, rdfDoc);
   },
   transform: function(op1, op2, side) {},
-  compose: function(op1, op2) {},
+  compose: function(op1, op2) {
+    var rdfOp, rdfOp1, rdfOp2, textOps;
+    rdfOp1 = new rdfJsonOT.Operation(op1.getRdfInsertions(), op1.getRdfDeletions());
+    rdfOp2 = new rdfJsonOT.Operation(op2.getRdfInsertions(), op2.getRdfDeletions());
+    textOps = textOT.compose(op1.getTextOps(), op2.getTextOps());
+    rdfOp = rdfJsonOT.compose(rdfOp1, rdfOp2);
+    return new HybridOp(textOps, rdfOp.getTriplesToAdd(), rdfOp.getTriplesToDel());
+  },
   syncDocuments: function(snapshot, op) {
     var rdfDocAfter, rdfDocBefore, rdfOp, textDocAfter, textDocAfterParsed, _ref, _ref1;
     snapshot = this._ensureDoc(snapshot);

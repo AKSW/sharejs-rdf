@@ -151,7 +151,14 @@ hybridOT =
   transform: (op1, op2, side) -> # TODO
 
   # combine op1 and op2 to a single operation
-  compose: (op1, op2) -> # TODO
+  compose: (op1, op2) ->
+    rdfOp1 = new rdfJsonOT.Operation op1.getRdfInsertions(), op1.getRdfDeletions()
+    rdfOp2 = new rdfJsonOT.Operation op2.getRdfInsertions(), op2.getRdfDeletions() 
+
+    textOps = textOT.compose op1.getTextOps(), op2.getTextOps()
+    rdfOp = rdfJsonOT.compose rdfOp1, rdfOp2
+
+    new HybridOp textOps, rdfOp.getTriplesToAdd(), rdfOp.getTriplesToDel()
 
   # applies turtle and rdf/json changes to the snapshot and
   # translates turtle <-> rdf/json operations, so that the
