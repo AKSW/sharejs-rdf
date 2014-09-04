@@ -161,7 +161,7 @@ angular.module('app').factory('TripleSet', function() {
       for (var predicateURI in predicates) {
         var objects = predicates[predicateURI];
 
-        for (var i = 0; i < predicates.lengt; i++) {
+        for (var i = 0; i < objects.length; i++) {
           var object = objects[i];
 
           tripleSet.addTriple(subjectURI, predicateURI, object);
