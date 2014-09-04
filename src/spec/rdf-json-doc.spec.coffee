@@ -3,7 +3,7 @@ require './matchers/triples'
 
 rdfJson = require '../lib/types/rdf-json'
 
-RdfJsonDoc = rdfJson.Doc
+RdfJsonDoc = rdfJson.doc
 
 
 describe 'RdfJsonDoc', ->

@@ -87,17 +87,17 @@ removeTripleFromTurtle = (turtleContent, s, p, o) ->
 
 
 hybridOpToRdfJsonOp = (op) ->
-  new rdfJsonOT.Operation op.getRdfInsertions(), op.getRdfDeletions()
+  new rdfJsonOT.op op.getRdfInsertions(), op.getRdfDeletions()
 
 # === End of utility functions ===
 
 
 class HybridDoc
-  @fromData: (data) -> new HybridDoc data.turtleContent, rdfJsonOT.Doc.fromData(data.rdfJsonDoc)
+  @fromData: (data) -> new HybridDoc data.turtleContent, rdfJsonOT.doc.fromData(data.rdfJsonDoc)
 
   constructor: (turtleContent, rdfJsonContent) ->
     @setTurtleContent turtleContent
-    if rdfJsonContent instanceof rdfJsonOT.Doc
+    if rdfJsonContent instanceof rdfJsonOT.doc
       @rdfJsonDoc = rdfJsonContent
     else
       @setRdfJsonContent rdfJsonContent
@@ -110,7 +110,7 @@ class HybridDoc
   getRdfJsonDoc: -> @rdfJsonDoc
   getRdfJsonContent: -> @rdfJsonDoc.exportTriples()
   setRdfJsonContent: (rdfJsonContent) ->
-    @rdfJsonDoc = new rdfJsonOT.Doc
+    @rdfJsonDoc = new rdfJsonOT.doc
     @rdfJsonDoc.insert rdfJsonContent
     @rdfJsonDoc
 
@@ -197,7 +197,7 @@ hybridOT =
     rdfDocBefore = snapshot.getRdfJsonDoc()
 
     textDocAfter = textOT.apply snapshot.getTurtleContent(), op.getTextOps()
-    rdfOp = new rdfJsonOT.Operation op.getRdfInsertions(), op.getRdfDeletions()
+    rdfOp = new rdfJsonOT.op op.getRdfInsertions(), op.getRdfDeletions()
     rdfDocAfter = rdfJsonOT.apply snapshot.getRdfJsonDoc(), rdfOp
 
     [textDocAfter, textDocAfterParsed] = @_parseTurtleAndCommentedTripleOps textDocAfter
@@ -235,7 +235,7 @@ hybridOT =
     [textDocAfter, rdfDocAfter]
 
   _applyChangesToRdf: (rdfDoc, triplesToInsert, triplesToDelete) ->
-    rdfOp = new rdfJsonOT.Operation triplesToInsert, triplesToDelete
+    rdfOp = new rdfJsonOT.op triplesToInsert, triplesToDelete
     rdfDoc = rdfJsonOT.apply rdfDoc, rdfOp
     rdfDoc
 

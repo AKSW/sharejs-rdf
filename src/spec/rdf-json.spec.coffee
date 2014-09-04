@@ -3,8 +3,8 @@ require './matchers/triples'
 
 rdfJson = require '../lib/types/rdf-json'
 
-RdfJsonDoc = rdfJson.Doc
-RdfJsonOperation = rdfJson.Operation
+RdfJsonDoc = rdfJson.doc
+RdfJsonOperation = rdfJson.op
 
 
 describe 'sharejs-rdf-json', ->
@@ -22,8 +22,8 @@ describe 'sharejs-rdf-json', ->
     expect(sharejs.types['rdf-json']).toEqual(rdfJson);
 
   it 'exports document & operation prototype', ->
-    expect(rdfJson.Doc).toBeFunction();
-    expect(rdfJson.Operation).toBeFunction();
+    expect(rdfJson.doc).toBeFunction();
+    expect(rdfJson.op).toBeFunction();
 
 
   describe 'create method', ->

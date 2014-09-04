@@ -21,8 +21,8 @@ describe 'rdf/json web client script', ->
       expect( rdfJson ).toBeObject()
 
     it 'has the necessary properties', ->
-      expect( rdfJson.Doc ).toBeFunction()
-      expect( rdfJson.Operation ).toBeFunction()
+      expect( rdfJson.doc ).toBeFunction()
+      expect( rdfJson.op ).toBeFunction()
       expect( rdfJson.name ).toEqual 'rdf-json'
       expect( rdfJson.apply ).toBeFunction()
       expect( rdfJson.compose ).toBeFunction()

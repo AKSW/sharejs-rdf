@@ -170,9 +170,9 @@ class RdfJsonOperation
 
 
 rdfJson =
-  Doc: RdfJsonDoc
-  Operation: RdfJsonOperation
   name: 'rdf-json'
+  doc: RdfJsonDoc
+  op: RdfJsonOperation
 
   create: -> new RdfJsonDoc
 

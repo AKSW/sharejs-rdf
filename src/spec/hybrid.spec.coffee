@@ -8,7 +8,7 @@ textOT = (require '../node_modules/share/').types.text
 HybridDoc = hybridOT.doc
 HybridOp  = hybridOT.op
 
-RdfJsonOp = rdfJsonOT.Operation
+RdfJsonOp = rdfJsonOT.op
 
 
 rdf = require 'node-rdf'

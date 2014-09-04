@@ -8,19 +8,19 @@ rdfJson.api =
   getData: -> rdfJson.exportTriples(@snapshot.triples)
 
   insert: (triples, callback) ->
-    op = rdfJson.Operation.insert triples
+    op = rdfJson.op.insert triples
 
     @submitOp op, callback
     op
 
   delete: (triples, callback) ->
-    op = rdfJson.Operation.delete triples
+    op = rdfJson.op.delete triples
 
     @submitOp op, callback
     op
 
   update: (triplesToIns, triplesToDel, callback) ->
-    op = new rdfJson.Operation(triplesToIns, triplesToDel)
+    op = new rdfJson.op(triplesToIns, triplesToDel)
 
     @submitOp op, callback
     op
