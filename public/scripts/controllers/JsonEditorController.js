@@ -1,7 +1,6 @@
-'use strict';
-
 angular.module('app').controller('JsonEditorController',
                                 ['$scope', '$element', 'AlertService', function ($scope, $element, AlertService) {
+  'use strict';
 
   // Properties:
 

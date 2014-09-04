@@ -1,6 +1,6 @@
-'use strict';
-
 angular.module('app').factory('AlertService', [function() {
+  'use strict';
+  
   var service = {
     /**
      *  @param {string} message - The message to display.

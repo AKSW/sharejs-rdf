@@ -1,6 +1,5 @@
-'use strict';
-
 angular.module('app').controller('AppController', ['$scope', function($scope) {
+  'use strict';
 
   $scope.alerts = [];
 
