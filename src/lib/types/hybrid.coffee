@@ -172,7 +172,7 @@ hybridOT =
     # text operations depends on the rest of the turtle document
     # (would need the current snapshot)
 
-    new HybridOp op1tTextOps, op1tRdfOp.getTriplesToAdd(), op1tRdfOp.getTriplesToDel()
+    new HybridOp op1tTextOps, op1tRdfOp.getInsertions(), op1tRdfOp.getDeletions()
 
   # combine op1 and op2 to a single operation
   compose: (op1, op2) ->
@@ -185,7 +185,7 @@ hybridOT =
     textOps = textOT.compose op1.getTextOps(), op2.getTextOps()
     rdfOp = rdfJsonOT.compose rdfOp1, rdfOp2
 
-    new HybridOp textOps, rdfOp.getTriplesToAdd(), rdfOp.getTriplesToDel()
+    new HybridOp textOps, rdfOp.getInsertions(), rdfOp.getDeletions()
 
   # applies turtle and rdf/json changes to the snapshot and
   # translates turtle <-> rdf/json operations, so that the

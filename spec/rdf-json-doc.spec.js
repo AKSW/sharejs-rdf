@@ -7,7 +7,7 @@
 
   rdfJson = require('../lib/types/rdf-json');
 
-  RdfJsonDoc = rdfJson.Doc;
+  RdfJsonDoc = rdfJson.doc;
 
   describe('RdfJsonDoc', function() {
     var testTriples;

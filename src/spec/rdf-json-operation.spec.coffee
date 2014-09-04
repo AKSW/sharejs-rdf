@@ -22,31 +22,31 @@ describe 'RdfJsonOperation', ->
   it 'has working constructor & getters', ->
     op = new RdfJsonOperation(testTriples, testTriples2)
 
-    expect(op.getTriplesToAdd()).triplesToEqual testTriples
-    expect(op.getTriplesToDel()).triplesToEqual testTriples2
+    expect(op.getInsertions()).triplesToEqual testTriples
+    expect(op.getDeletions()).triplesToEqual testTriples2
 
   it 'can set triples', ->
     op = new RdfJsonOperation({}, {})
 
-    op.setTriplesToAdd testTriples
-    op.setTriplesToDel testTriples2
-    expect(op.getTriplesToAdd()).triplesToEqual testTriples
-    expect(op.getTriplesToDel()).triplesToEqual testTriples2
+    op.setInsertions testTriples
+    op.setDeletions testTriples2
+    expect(op.getInsertions()).triplesToEqual testTriples
+    expect(op.getDeletions()).triplesToEqual testTriples2
 
   it 'can clone', ->
     op = new RdfJsonOperation(testTriples, testTriples2)
     clone = op.clone()
 
-    expect(clone.getTriplesToAdd()).triplesToEqual testTriples
-    expect(clone.getTriplesToDel()).triplesToEqual testTriples2
+    expect(clone.getInsertions()).triplesToEqual testTriples
+    expect(clone.getDeletions()).triplesToEqual testTriples2
 
   it 'can create from serialised data', ->
     op = new RdfJsonOperation(testTriples, testTriples2)
     serialised = JSON.parse JSON.stringify(op)
 
     op2 = RdfJsonOperation.fromData serialised
-    expect(op2.getTriplesToAdd()).triplesToEqual testTriples
-    expect(op2.getTriplesToDel()).triplesToEqual testTriples2
+    expect(op2.getInsertions()).triplesToEqual testTriples
+    expect(op2.getDeletions()).triplesToEqual testTriples2
 
 
   describe 'has working factory methods:', ->
@@ -54,11 +54,11 @@ describe 'RdfJsonOperation', ->
     it 'insert', ->
       op = RdfJsonOperation.insert(testTriples)
 
-      expect(op.getTriplesToAdd()).triplesToEqual testTriples
-      expect(op.getTriplesToDel()).triplesToEqual {}
+      expect(op.getInsertions()).triplesToEqual testTriples
+      expect(op.getDeletions()).triplesToEqual {}
 
     it 'delete', ->
       op = RdfJsonOperation.delete(testTriples)
 
-      expect(op.getTriplesToAdd()).triplesToEqual {}
-      expect(op.getTriplesToDel()).triplesToEqual testTriples
+      expect(op.getInsertions()).triplesToEqual {}
+      expect(op.getDeletions()).triplesToEqual testTriples

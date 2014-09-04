@@ -7,7 +7,7 @@
 
   rdfJson = require('../lib/types/rdf-json');
 
-  RdfJsonOperation = rdfJson.Operation;
+  RdfJsonOperation = rdfJson.op;
 
   describe('RdfJsonOperation', function() {
     var testTriples, testTriples2;
@@ -34,44 +34,44 @@
     it('has working constructor & getters', function() {
       var op;
       op = new RdfJsonOperation(testTriples, testTriples2);
-      expect(op.getTriplesToAdd()).triplesToEqual(testTriples);
-      return expect(op.getTriplesToDel()).triplesToEqual(testTriples2);
+      expect(op.getInsertions()).triplesToEqual(testTriples);
+      return expect(op.getDeletions()).triplesToEqual(testTriples2);
     });
     it('can set triples', function() {
       var op;
       op = new RdfJsonOperation({}, {});
-      op.setTriplesToAdd(testTriples);
-      op.setTriplesToDel(testTriples2);
-      expect(op.getTriplesToAdd()).triplesToEqual(testTriples);
-      return expect(op.getTriplesToDel()).triplesToEqual(testTriples2);
+      op.setInsertions(testTriples);
+      op.setDeletions(testTriples2);
+      expect(op.getInsertions()).triplesToEqual(testTriples);
+      return expect(op.getDeletions()).triplesToEqual(testTriples2);
     });
     it('can clone', function() {
       var clone, op;
       op = new RdfJsonOperation(testTriples, testTriples2);
       clone = op.clone();
-      expect(clone.getTriplesToAdd()).triplesToEqual(testTriples);
-      return expect(clone.getTriplesToDel()).triplesToEqual(testTriples2);
+      expect(clone.getInsertions()).triplesToEqual(testTriples);
+      return expect(clone.getDeletions()).triplesToEqual(testTriples2);
     });
     it('can create from serialised data', function() {
       var op, op2, serialised;
       op = new RdfJsonOperation(testTriples, testTriples2);
       serialised = JSON.parse(JSON.stringify(op));
       op2 = RdfJsonOperation.fromData(serialised);
-      expect(op2.getTriplesToAdd()).triplesToEqual(testTriples);
-      return expect(op2.getTriplesToDel()).triplesToEqual(testTriples2);
+      expect(op2.getInsertions()).triplesToEqual(testTriples);
+      return expect(op2.getDeletions()).triplesToEqual(testTriples2);
     });
     return describe('has working factory methods:', function() {
       it('insert', function() {
         var op;
         op = RdfJsonOperation.insert(testTriples);
-        expect(op.getTriplesToAdd()).triplesToEqual(testTriples);
-        return expect(op.getTriplesToDel()).triplesToEqual({});
+        expect(op.getInsertions()).triplesToEqual(testTriples);
+        return expect(op.getDeletions()).triplesToEqual({});
       });
       return it('delete', function() {
         var op;
         op = RdfJsonOperation["delete"](testTriples);
-        expect(op.getTriplesToAdd()).triplesToEqual({});
-        return expect(op.getTriplesToDel()).triplesToEqual(testTriples);
+        expect(op.getInsertions()).triplesToEqual({});
+        return expect(op.getDeletions()).triplesToEqual(testTriples);
       });
     });
   });

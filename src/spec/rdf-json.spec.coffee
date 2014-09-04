@@ -156,7 +156,7 @@ describe 'sharejs-rdf-json', ->
 
       opc = rdfJson.compose op1, op2
 
-      expect( opc.getTriplesToAdd() ).triplesToEqual {
+      expect( opc.getInsertions() ).triplesToEqual {
         'http://example.com/persons/john':
           'http://example.com/ontology#age':
             [ { type: 'literal', value: '36' } ]
@@ -165,7 +165,7 @@ describe 'sharejs-rdf-json', ->
             [ { type: 'literal', value: '25' } ]
       }
 
-      expect( opc.getTriplesToDel() ).triplesToEqual {
+      expect( opc.getDeletions() ).triplesToEqual {
         'http://example.com/persons/john':
           'http://example.com/ontology#noChildren':
             [ { type: 'literal', value: '2' } ]
@@ -203,10 +203,10 @@ describe 'sharejs-rdf-json', ->
         expect(op2.clone).toHaveBeenCalled
 
       it 'does not modify the input operations', ->
-        expect(op1.getTriplesToAdd()).triplesToEqual op1Clone.getTriplesToAdd()
-        expect(op1.getTriplesToDel()).triplesToEqual op1Clone.getTriplesToDel()
-        expect(op2.getTriplesToAdd()).triplesToEqual op2Clone.getTriplesToAdd()
-        expect(op2.getTriplesToDel()).triplesToEqual op2Clone.getTriplesToDel()
+        expect(op1.getInsertions()).triplesToEqual op1Clone.getInsertions()
+        expect(op1.getDeletions()).triplesToEqual op1Clone.getDeletions()
+        expect(op2.getInsertions()).triplesToEqual op2Clone.getInsertions()
+        expect(op2.getDeletions()).triplesToEqual op2Clone.getDeletions()
 
       it 'throws error on bad side parameter', ->
         side = 'foobar'

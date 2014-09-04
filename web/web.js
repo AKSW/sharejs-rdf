@@ -3211,30 +3211,30 @@ RdfJsonOperation = (function() {
   }
 
   RdfJsonOperation.prototype.clone = function() {
-    return new RdfJsonOperation(util.cloneTriples(this.getTriplesToAdd()), util.cloneTriples(this.getTriplesToDel()));
+    return new RdfJsonOperation(util.cloneTriples(this.getInsertions()), util.cloneTriples(this.getDeletions()));
   };
 
-  RdfJsonOperation.prototype.getTriplesToAdd = function() {
+  RdfJsonOperation.prototype.getInsertions = function() {
     return this.triplesAdd;
   };
 
-  RdfJsonOperation.prototype.setTriplesToAdd = function(triples) {
+  RdfJsonOperation.prototype.setInsertions = function(triples) {
     return this.triplesAdd = triples;
   };
 
-  RdfJsonOperation.prototype.hasTriplesToAdd = function() {
+  RdfJsonOperation.prototype.hasInsertions = function() {
     return !this._triplesEmpty(this.triplesAdd);
   };
 
-  RdfJsonOperation.prototype.getTriplesToDel = function() {
+  RdfJsonOperation.prototype.getDeletions = function() {
     return this.triplesDel;
   };
 
-  RdfJsonOperation.prototype.setTriplesToDel = function(triples) {
+  RdfJsonOperation.prototype.setDeletions = function(triples) {
     return this.triplesDel = triples;
   };
 
-  RdfJsonOperation.prototype.hasTriplesToDel = function() {
+  RdfJsonOperation.prototype.hasDeletions = function() {
     return !this._triplesEmpty(this.triplesDel);
   };
 
@@ -3252,9 +3252,9 @@ RdfJsonOperation = (function() {
 })();
 
 rdfJson = {
-  Doc: RdfJsonDoc,
-  Operation: RdfJsonOperation,
   name: 'rdf-json',
+  doc: RdfJsonDoc,
+  op: RdfJsonOperation,
   create: function() {
     return new RdfJsonDoc;
   },
@@ -3263,11 +3263,11 @@ rdfJson = {
     snapshot = this._ensureDoc(snapshot);
     op = this._ensureOp(op);
     newSnapshot = snapshot.clone();
-    if (op.hasTriplesToAdd()) {
-      newSnapshot.insert(op.getTriplesToAdd());
+    if (op.hasInsertions()) {
+      newSnapshot.insert(op.getInsertions());
     }
-    if (op.hasTriplesToDel()) {
-      newSnapshot["delete"](op.getTriplesToDel());
+    if (op.hasDeletions()) {
+      newSnapshot["delete"](op.getDeletions());
     }
     return newSnapshot;
   },
@@ -3286,20 +3286,20 @@ rdfJson = {
     if (op1First) {
       return op1t;
     }
-    if (util.isTriplesEmpty(op1.getTriplesToAdd()) && util.isTriplesEmpty(op2.getTriplesToAdd())) {
+    if (util.isTriplesEmpty(op1.getInsertions()) && util.isTriplesEmpty(op2.getInsertions())) {
       return op1t;
     }
-    if (util.isTriplesEmpty(op1.getTriplesToDel()) && util.isTriplesEmpty(op2.getTriplesToDel())) {
+    if (util.isTriplesEmpty(op1.getDeletions()) && util.isTriplesEmpty(op2.getDeletions())) {
       return op1t;
     }
-    op1t.setTriplesToAdd(util.triplesDifference(op1.getTriplesToAdd(), op2.getTriplesToDel()));
-    op1t.setTriplesToDel(util.triplesDifference(op1.getTriplesToDel(), op2.getTriplesToAdd()));
+    op1t.setInsertions(util.triplesDifference(op1.getInsertions(), op2.getDeletions()));
+    op1t.setDeletions(util.triplesDifference(op1.getDeletions(), op2.getInsertions()));
     return op1t;
   },
   compose: function(op1, op2) {
     var triplesToAdd, triplesToAddUnion, triplesToDel, triplesToDelUnion;
-    triplesToAddUnion = util.triplesUnion(op1.getTriplesToAdd(), op2.getTriplesToAdd());
-    triplesToDelUnion = util.triplesUnion(op1.getTriplesToDel(), op2.getTriplesToDel());
+    triplesToAddUnion = util.triplesUnion(op1.getInsertions(), op2.getInsertions());
+    triplesToDelUnion = util.triplesUnion(op1.getDeletions(), op2.getDeletions());
     triplesToAdd = util.triplesDifference(triplesToAddUnion, triplesToDelUnion);
     triplesToDel = util.triplesDifference(triplesToDelUnion, triplesToAddUnion);
     return new RdfJsonOperation(triplesToAdd, triplesToDel);
@@ -3351,19 +3351,19 @@ rdfJson.api = {
   },
   insert: function(triples, callback) {
     var op;
-    op = rdfJson.Operation.insert(triples);
+    op = rdfJson.op.insert(triples);
     this.submitOp(op, callback);
     return op;
   },
   "delete": function(triples, callback) {
     var op;
-    op = rdfJson.Operation["delete"](triples);
+    op = rdfJson.op["delete"](triples);
     this.submitOp(op, callback);
     return op;
   },
   update: function(triplesToIns, triplesToDel, callback) {
     var op;
-    op = new rdfJson.Operation(triplesToIns, triplesToDel);
+    op = new rdfJson.op(triplesToIns, triplesToDel);
     this.submitOp(op, callback);
     return op;
   },
@@ -3493,17 +3493,17 @@ removeTripleFromTurtle = function(turtleContent, s, p, o) {
 };
 
 hybridOpToRdfJsonOp = function(op) {
-  return new rdfJsonOT.Operation(op.getRdfInsertions(), op.getRdfDeletions());
+  return new rdfJsonOT.op(op.getRdfInsertions(), op.getRdfDeletions());
 };
 
 HybridDoc = (function() {
   HybridDoc.fromData = function(data) {
-    return new HybridDoc(data.turtleContent, rdfJsonOT.Doc.fromData(data.rdfJsonDoc));
+    return new HybridDoc(data.turtleContent, rdfJsonOT.doc.fromData(data.rdfJsonDoc));
   };
 
   function HybridDoc(turtleContent, rdfJsonContent) {
     this.setTurtleContent(turtleContent);
-    if (rdfJsonContent instanceof rdfJsonOT.Doc) {
+    if (rdfJsonContent instanceof rdfJsonOT.doc) {
       this.rdfJsonDoc = rdfJsonContent;
     } else {
       this.setRdfJsonContent(rdfJsonContent);
@@ -3531,7 +3531,7 @@ HybridDoc = (function() {
   };
 
   HybridDoc.prototype.setRdfJsonContent = function(rdfJsonContent) {
-    this.rdfJsonDoc = new rdfJsonOT.Doc;
+    this.rdfJsonDoc = new rdfJsonOT.doc;
     this.rdfJsonDoc.insert(rdfJsonContent);
     return this.rdfJsonDoc;
   };
@@ -3607,7 +3607,7 @@ hybridOT = {
     }
     op1tTextOps = textOT.transform(op1.getTextOps(), op2.getTextOps(), side);
     op1tRdfOp = rdfJsonOT.transform(hybridOpToRdfJsonOp(op1), hybridOpToRdfJsonOp(op2), side);
-    return new HybridOp(op1tTextOps, op1tRdfOp.getTriplesToAdd(), op1tRdfOp.getTriplesToDel());
+    return new HybridOp(op1tTextOps, op1tRdfOp.getInsertions(), op1tRdfOp.getDeletions());
   },
   compose: function(op1, op2) {
     var rdfOp, rdfOp1, rdfOp2, textOps;
@@ -3617,7 +3617,7 @@ hybridOT = {
     rdfOp2 = hybridOpToRdfJsonOp(op2);
     textOps = textOT.compose(op1.getTextOps(), op2.getTextOps());
     rdfOp = rdfJsonOT.compose(rdfOp1, rdfOp2);
-    return new HybridOp(textOps, rdfOp.getTriplesToAdd(), rdfOp.getTriplesToDel());
+    return new HybridOp(textOps, rdfOp.getInsertions(), rdfOp.getDeletions());
   },
   syncDocuments: function(snapshot, op) {
     var rdfDocAfter, rdfDocBefore, rdfOp, textDocAfter, textDocAfterParsed, _ref, _ref1;
@@ -3625,7 +3625,7 @@ hybridOT = {
     op = this._ensureOp(op);
     rdfDocBefore = snapshot.getRdfJsonDoc();
     textDocAfter = textOT.apply(snapshot.getTurtleContent(), op.getTextOps());
-    rdfOp = new rdfJsonOT.Operation(op.getRdfInsertions(), op.getRdfDeletions());
+    rdfOp = new rdfJsonOT.op(op.getRdfInsertions(), op.getRdfDeletions());
     rdfDocAfter = rdfJsonOT.apply(snapshot.getRdfJsonDoc(), rdfOp);
     _ref = this._parseTurtleAndCommentedTripleOps(textDocAfter), textDocAfter = _ref[0], textDocAfterParsed = _ref[1];
     if (textDocAfterParsed) {
@@ -3654,7 +3654,7 @@ hybridOT = {
   },
   _applyChangesToRdf: function(rdfDoc, triplesToInsert, triplesToDelete) {
     var rdfOp;
-    rdfOp = new rdfJsonOT.Operation(triplesToInsert, triplesToDelete);
+    rdfOp = new rdfJsonOT.op(triplesToInsert, triplesToDelete);
     rdfDoc = rdfJsonOT.apply(rdfDoc, rdfOp);
     return rdfDoc;
   },

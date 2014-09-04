@@ -15,7 +15,7 @@
 
   HybridOp = hybridOT.op;
 
-  RdfJsonOp = rdfJsonOT.Operation;
+  RdfJsonOp = rdfJsonOT.op;
 
   rdf = require('node-rdf');
 
@@ -503,7 +503,7 @@
             ]
           }
         }, {});
-        op1 = new HybridOp([], rdfOp1.getTriplesToAdd(), rdfOp1.getTriplesToDel());
+        op1 = new HybridOp([], rdfOp1.getInsertions(), rdfOp1.getDeletions());
         rdfOp2 = new RdfJsonOp({}, {
           'http://example.com/persons/john': {
             'http://example.com/ontology#name': [
@@ -514,15 +514,15 @@
             ]
           }
         });
-        op2 = new HybridOp([], rdfOp2.getTriplesToAdd(), rdfOp2.getTriplesToDel());
+        op2 = new HybridOp([], rdfOp2.getInsertions(), rdfOp2.getDeletions());
         rdfOp1T = rdfJsonOT.transform(rdfOp1, rdfOp2, 'left');
         rdfOp2T = rdfJsonOT.transform(rdfOp2, rdfOp1, 'right');
         op1T = hybridOT.transform(op1, op2, 'left');
         op2T = hybridOT.transform(op2, op1, 'right');
-        expect(op1T.getRdfInsertions()).triplesToEqual(rdfOp1T.getTriplesToAdd());
-        expect(op1T.getRdfDeletions()).triplesToEqual(rdfOp1T.getTriplesToDel());
-        expect(op2T.getRdfInsertions()).triplesToEqual(rdfOp2T.getTriplesToAdd());
-        return expect(op2T.getRdfDeletions()).triplesToEqual(rdfOp2T.getTriplesToDel());
+        expect(op1T.getRdfInsertions()).triplesToEqual(rdfOp1T.getInsertions());
+        expect(op1T.getRdfDeletions()).triplesToEqual(rdfOp1T.getDeletions());
+        expect(op2T.getRdfInsertions()).triplesToEqual(rdfOp2T.getInsertions());
+        return expect(op2T.getRdfDeletions()).triplesToEqual(rdfOp2T.getDeletions());
       });
     });
     return describe('compose method', function() {

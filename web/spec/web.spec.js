@@ -31,8 +31,8 @@
         return expect(rdfJson).toBeObject();
       });
       return it('has the necessary properties', function() {
-        expect(rdfJson.Doc).toBeFunction();
-        expect(rdfJson.Operation).toBeFunction();
+        expect(rdfJson.doc).toBeFunction();
+        expect(rdfJson.op).toBeFunction();
         expect(rdfJson.name).toEqual('rdf-json');
         expect(rdfJson.apply).toBeFunction();
         expect(rdfJson.compose).toBeFunction();

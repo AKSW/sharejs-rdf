@@ -7,9 +7,9 @@
 
   rdfJson = require('../lib/types/rdf-json');
 
-  RdfJsonDoc = rdfJson.Doc;
+  RdfJsonDoc = rdfJson.doc;
 
-  RdfJsonOperation = rdfJson.Operation;
+  RdfJsonOperation = rdfJson.op;
 
   describe('sharejs-rdf-json', function() {
     it('is named "rdf-json"', function() {
@@ -24,8 +24,8 @@
       return expect(sharejs.types['rdf-json']).toEqual(rdfJson);
     });
     it('exports document & operation prototype', function() {
-      expect(rdfJson.Doc).toBeFunction();
-      return expect(rdfJson.Operation).toBeFunction();
+      expect(rdfJson.doc).toBeFunction();
+      return expect(rdfJson.op).toBeFunction();
     });
     describe('create method', function() {
       var doc;
@@ -236,7 +236,7 @@
           }
         });
         opc = rdfJson.compose(op1, op2);
-        expect(opc.getTriplesToAdd()).triplesToEqual({
+        expect(opc.getInsertions()).triplesToEqual({
           'http://example.com/persons/john': {
             'http://example.com/ontology#age': [
               {
@@ -254,7 +254,7 @@
             ]
           }
         });
-        return expect(opc.getTriplesToDel()).triplesToEqual({
+        return expect(opc.getDeletions()).triplesToEqual({
           'http://example.com/persons/john': {
             'http://example.com/ontology#noChildren': [
               {
@@ -302,10 +302,10 @@
           return expect(op2.clone).toHaveBeenCalled;
         });
         it('does not modify the input operations', function() {
-          expect(op1.getTriplesToAdd()).triplesToEqual(op1Clone.getTriplesToAdd());
-          expect(op1.getTriplesToDel()).triplesToEqual(op1Clone.getTriplesToDel());
-          expect(op2.getTriplesToAdd()).triplesToEqual(op2Clone.getTriplesToAdd());
-          return expect(op2.getTriplesToDel()).triplesToEqual(op2Clone.getTriplesToDel());
+          expect(op1.getInsertions()).triplesToEqual(op1Clone.getInsertions());
+          expect(op1.getDeletions()).triplesToEqual(op1Clone.getDeletions());
+          expect(op2.getInsertions()).triplesToEqual(op2Clone.getInsertions());
+          return expect(op2.getDeletions()).triplesToEqual(op2Clone.getDeletions());
         });
         return it('throws error on bad side parameter', function() {
           var side;

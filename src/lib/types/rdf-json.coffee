@@ -153,15 +153,15 @@ class RdfJsonOperation
     @triplesDel = triplesToDelete
 
   clone: ->
-    new RdfJsonOperation(util.cloneTriples(@getTriplesToAdd()), util.cloneTriples(@getTriplesToDel()))
+    new RdfJsonOperation(util.cloneTriples(@getInsertions()), util.cloneTriples(@getDeletions()))
 
-  getTriplesToAdd: -> @triplesAdd
-  setTriplesToAdd: (triples) -> @triplesAdd = triples
-  hasTriplesToAdd: -> !@_triplesEmpty(@triplesAdd)
+  getInsertions: -> @triplesAdd
+  setInsertions: (triples) -> @triplesAdd = triples
+  hasInsertions: -> !@_triplesEmpty(@triplesAdd)
 
-  getTriplesToDel: -> @triplesDel
-  setTriplesToDel: (triples) -> @triplesDel = triples
-  hasTriplesToDel: -> !@_triplesEmpty(@triplesDel)
+  getDeletions: -> @triplesDel
+  setDeletions: (triples) -> @triplesDel = triples
+  hasDeletions: -> !@_triplesEmpty(@triplesDel)
 
   _triplesEmpty: (triples) ->
     return false for k, v of triples
@@ -181,8 +181,8 @@ rdfJson =
     op = @_ensureOp op
     newSnapshot = snapshot.clone()
 
-    newSnapshot.insert op.getTriplesToAdd() if op.hasTriplesToAdd()
-    newSnapshot.delete op.getTriplesToDel() if op.hasTriplesToDel()
+    newSnapshot.insert op.getInsertions() if op.hasInsertions()
+    newSnapshot.delete op.getDeletions() if op.hasDeletions()
 
     return newSnapshot
 
@@ -204,18 +204,18 @@ rdfJson =
     return op1t if op1First    # we are only modifying op1 if op2 is applied first
 
     # insertion + insertion or deletion + deletion is uncritical
-    return op1t if util.isTriplesEmpty(op1.getTriplesToAdd()) && util.isTriplesEmpty(op2.getTriplesToAdd())
-    return op1t if util.isTriplesEmpty(op1.getTriplesToDel()) && util.isTriplesEmpty(op2.getTriplesToDel())
+    return op1t if util.isTriplesEmpty(op1.getInsertions()) && util.isTriplesEmpty(op2.getInsertions())
+    return op1t if util.isTriplesEmpty(op1.getDeletions()) && util.isTriplesEmpty(op2.getDeletions())
 
-    op1t.setTriplesToAdd util.triplesDifference( op1.getTriplesToAdd(), op2.getTriplesToDel() )
-    op1t.setTriplesToDel util.triplesDifference( op1.getTriplesToDel(), op2.getTriplesToAdd() )
+    op1t.setInsertions util.triplesDifference( op1.getInsertions(), op2.getDeletions() )
+    op1t.setDeletions util.triplesDifference( op1.getDeletions(), op2.getInsertions() )
 
     return op1t
 
   # combine op1 and op2 to a single operation
   compose: (op1, op2) ->
-    triplesToAddUnion = util.triplesUnion op1.getTriplesToAdd(), op2.getTriplesToAdd()
-    triplesToDelUnion = util.triplesUnion op1.getTriplesToDel(), op2.getTriplesToDel()
+    triplesToAddUnion = util.triplesUnion op1.getInsertions(), op2.getInsertions()
+    triplesToDelUnion = util.triplesUnion op1.getDeletions(), op2.getDeletions()
 
     triplesToAdd = util.triplesDifference triplesToAddUnion, triplesToDelUnion
     triplesToDel = util.triplesDifference triplesToDelUnion, triplesToAddUnion
