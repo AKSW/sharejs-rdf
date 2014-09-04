@@ -1,5 +1,5 @@
 (function() {
-  var HybridDoc, HybridOp, hybridOT, parseTurtle, parserTriplesArrayToRdfJson, rdf;
+  var HybridDoc, HybridOp, RdfJsonOp, hybridOT, parseTurtle, parserTriplesArrayToRdfJson, rdf, rdfJsonOT, textOT;
 
   require('jasmine-expect');
 
@@ -7,9 +7,15 @@
 
   hybridOT = require('../lib/types/hybrid');
 
+  rdfJsonOT = require('../lib/types/rdf-json');
+
+  textOT = (require('../node_modules/share/')).types.text;
+
   HybridDoc = hybridOT.doc;
 
   HybridOp = hybridOT.op;
+
+  RdfJsonOp = rdfJsonOT.Operation;
 
   rdf = require('node-rdf');
 
@@ -453,6 +459,70 @@
           expect(snapshot.getTurtleContent()).toEqual("<http://example.com/persons/john> <http://example.com/ontology#name> \"John Smith\" .\n" + "<http://example.com/persons/john> <http://example.com/ontology#name> \"John R. Smith\" .");
           return expect(snapshot.getRdfJsonContent()).triplesToEqual(rdfJson);
         });
+      });
+    });
+    describe('transform method', function() {
+      it('transforms text operations correctly', function() {
+        var op1, op1T, op2, op2T, textOps1, textOps1T, textOps2, textOps2T;
+        textOps1 = [
+          {
+            p: 0,
+            i: 'John Smitch'
+          }
+        ];
+        op1 = new HybridOp(textOps1, {}, {});
+        textOps2 = [
+          {
+            p: 0,
+            i: 'John R. Smith'
+          }, {
+            p: 45,
+            d: 'Some content'
+          }
+        ];
+        op2 = new HybridOp(textOps2, {}, {});
+        textOps1T = textOT.transform(textOps1, textOps2, 'left');
+        textOps2T = textOT.transform(textOps2, textOps1, 'right');
+        op1T = hybridOT.transform(op1, op2, 'left');
+        op2T = hybridOT.transform(op2, op1, 'right');
+        expect(op1T.getTextOps()).toEqual(textOps1T);
+        return expect(op2T.getTextOps()).toEqual(textOps2T);
+      });
+      return it('transforms rdf/json operations correctly', function() {
+        var op1, op1T, op2, op2T, rdfOp1, rdfOp1T, rdfOp2, rdfOp2T;
+        rdfOp1 = new RdfJsonOp({
+          'http://example.com/persons/john': {
+            'http://example.com/ontology#name': [
+              {
+                type: 'literal',
+                value: 'John R. Smith'
+              }, {
+                type: 'literal',
+                value: 'John Richard Smith'
+              }
+            ]
+          }
+        }, {});
+        op1 = new HybridOp([], rdfOp1.getTriplesToAdd(), rdfOp1.getTriplesToDel());
+        rdfOp2 = new RdfJsonOp({}, {
+          'http://example.com/persons/john': {
+            'http://example.com/ontology#name': [
+              {
+                type: 'literal',
+                value: 'John Richard Smith'
+              }
+            ]
+          }
+        });
+        op2 = new HybridOp([], rdfOp2.getTriplesToAdd(), rdfOp2.getTriplesToDel());
+        rdfOp1T = rdfJsonOT.transform(rdfOp1, rdfOp2, 'left');
+        rdfOp2T = rdfJsonOT.transform(rdfOp2, rdfOp1, 'right');
+        op1T = hybridOT.transform(op1, op2, 'left');
+        op2T = hybridOT.transform(op2, op1, 'right');
+        expect(op1T.getRdfInsertions()).triplesToEqual(rdfOp1T.getTriplesToAdd());
+        expect(op1T.getRdfDeletions()).triplesToEqual(rdfOp1T.getTriplesToDel());
+        expect(op2T.getRdfInsertions()).triplesToEqual(rdfOp2T.getTriplesToAdd());
+        return expect(op2T.getRdfDeletions()).triplesToEqual(rdfOp2T.getTriplesToDel());
       });
     });
     return describe('compose method', function() {
