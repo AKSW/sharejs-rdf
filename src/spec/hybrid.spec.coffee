@@ -327,6 +327,7 @@ describe 'hybrid OT', ->
       expect(op1T.getTextOps()).toEqual textOps1T
       expect(op2T.getTextOps()).toEqual textOps2T
 
+
     it 'transforms rdf/json operations correctly', ->
 
       rdfOp1 = new RdfJsonOp {

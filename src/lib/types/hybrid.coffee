@@ -167,6 +167,11 @@ hybridOT =
     op1tTextOps = textOT.transform op1.getTextOps(), op2.getTextOps(), side
     op1tRdfOp = rdfJsonOT.transform hybridOpToRdfJsonOp(op1), hybridOpToRdfJsonOp(op2), side
 
+    # a more sophisticated transform method that considers interactions between
+    # turtle and rdf/json operation is not possible since the effect of
+    # text operations depends on the rest of the turtle document
+    # (would need the current snapshot)
+
     new HybridOp op1tTextOps, op1tRdfOp.getTriplesToAdd(), op1tRdfOp.getTriplesToDel()
 
   # combine op1 and op2 to a single operation
