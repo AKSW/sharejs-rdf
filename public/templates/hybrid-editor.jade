@@ -1,1 +1,6 @@
 div.hybrid-editor.row
+  div.col-lg-12.rdf
+    rdf-json-editor
+  div.col-lg-12.turtle
+    h4 Turtle
+    textarea(ui-codemirror='{ onLoad: codemirrorLoaded }', ng-model='turtleContents')

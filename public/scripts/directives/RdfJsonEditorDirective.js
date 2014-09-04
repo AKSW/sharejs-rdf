@@ -82,7 +82,11 @@ angular.module('app').directive('rdfJsonEditor', function () {
             $scope.finishEditing(tripleId);
           }
 
-          tripleSet.removeTriple(tripleId);
+          var triple = tripleSet.removeTriple(tripleId);
+
+          if (triple) {
+            tripleRemoved(triple);
+          }
         }
       };
 
