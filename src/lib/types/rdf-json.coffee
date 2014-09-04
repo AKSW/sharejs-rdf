@@ -174,6 +174,8 @@ rdfJson =
   doc: RdfJsonDoc
   op: RdfJsonOperation
 
+  exportTriples: exportTriples
+
   create: -> new RdfJsonDoc
 
   apply: (snapshot, op) ->

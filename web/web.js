@@ -3255,6 +3255,7 @@ rdfJson = {
   name: 'rdf-json',
   doc: RdfJsonDoc,
   op: RdfJsonOperation,
+  exportTriples: exportTriples,
   create: function() {
     return new RdfJsonDoc;
   },
