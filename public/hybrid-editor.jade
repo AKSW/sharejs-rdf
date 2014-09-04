@@ -1,0 +1,15 @@
+extends __layout
+
+block header
+  +nav_links
+
+block content
+  .page-header
+    h1 Turtle + RDF/JSON Hybrid Editor
+
+  div(ng-controller='HybridEditorController')
+    .row.connect
+      .col-lg-12
+        include _jade-blocks/sharejs-config
+
+    hybrid-editor
