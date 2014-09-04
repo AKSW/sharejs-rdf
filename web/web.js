@@ -3374,7 +3374,7 @@ rdfJson.api = {
   }
 };
 
-var HybridDoc, HybridOp, arrayFilter, hybridOT, mapTurtleToBlocks, parserTriplesArrayToRdfJson, rdf, rdfJsonOT, removeTripleFromTurtle, removeTripleFromTurtleBlock, sharejs, textOT, util;
+var HybridDoc, HybridOp, arrayFilter, hybridOT, hybridOpToRdfJsonOp, mapTurtleToBlocks, parserTriplesArrayToRdfJson, rdf, rdfJsonOT, removeTripleFromTurtle, removeTripleFromTurtleBlock, sharejs, textOT, util;
 
 rdf = null;
 
@@ -3492,6 +3492,10 @@ removeTripleFromTurtle = function(turtleContent, s, p, o) {
   return turtleContent;
 };
 
+hybridOpToRdfJsonOp = function(op) {
+  return new rdfJsonOT.Operation(op.getRdfInsertions(), op.getRdfDeletions());
+};
+
 HybridDoc = (function() {
   HybridDoc.fromData = function(data) {
     return new HybridDoc(data.turtleContent, rdfJsonOT.Doc.fromData(data.rdfJsonDoc));
@@ -3588,14 +3592,29 @@ hybridOT = {
   },
   apply: function(snapshot, op) {
     var rdfDoc, textDoc, _ref;
+    snapshot = this._ensureDoc(snapshot);
+    op = this._ensureOp(op);
     _ref = this.syncDocuments(snapshot, op), textDoc = _ref[0], rdfDoc = _ref[1];
     return new HybridDoc(textDoc, rdfDoc);
   },
-  transform: function(op1, op2, side) {},
+  transform: function(op1, op2, side) {
+    var op1First, op1tRdfOp, op1tTextOps;
+    op1 = this._ensureOp(op1);
+    op2 = this._ensureOp(op2);
+    op1First = side === 'right';
+    if (side !== 'left' && side !== 'right') {
+      throw new Error("Bad parameter 'side' given: " + side);
+    }
+    op1tTextOps = textOT.transform(op1.getTextOps(), op2.getTextOps(), side);
+    op1tRdfOp = rdfJsonOT.transform(hybridOpToRdfJsonOp(op1), hybridOpToRdfJsonOp(op2), side);
+    return new HybridOp(op1tTextOps, op1tRdfOp.getTriplesToAdd(), op1tRdfOp.getTriplesToDel());
+  },
   compose: function(op1, op2) {
     var rdfOp, rdfOp1, rdfOp2, textOps;
-    rdfOp1 = new rdfJsonOT.Operation(op1.getRdfInsertions(), op1.getRdfDeletions());
-    rdfOp2 = new rdfJsonOT.Operation(op2.getRdfInsertions(), op2.getRdfDeletions());
+    op1 = this._ensureOp(op1);
+    op2 = this._ensureOp(op2);
+    rdfOp1 = hybridOpToRdfJsonOp(op1);
+    rdfOp2 = hybridOpToRdfJsonOp(op2);
     textOps = textOT.compose(op1.getTextOps(), op2.getTextOps());
     rdfOp = rdfJsonOT.compose(rdfOp1, rdfOp2);
     return new HybridOp(textOps, rdfOp.getTriplesToAdd(), rdfOp.getTriplesToDel());

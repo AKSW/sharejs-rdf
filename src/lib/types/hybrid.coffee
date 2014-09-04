@@ -85,6 +85,10 @@ removeTripleFromTurtle = (turtleContent, s, p, o) ->
 
   return turtleContent
 
+
+hybridOpToRdfJsonOp = (op) ->
+  new rdfJsonOT.Operation op.getRdfInsertions(), op.getRdfDeletions()
+
 # === End of utility functions ===
 
 
@@ -141,6 +145,9 @@ hybridOT =
   create: () -> new HybridDoc('', {})
 
   apply: (snapshot, op) ->
+    snapshot = @_ensureDoc snapshot
+    op = @_ensureOp op
+
     [textDoc, rdfDoc] = @syncDocuments snapshot, op
 
     return new HybridDoc textDoc, rdfDoc
@@ -148,12 +155,27 @@ hybridOT =
   # return clone of op1, transformed by op2
   # side is "left" or "right"
   # "left": op2 to be applied first, "right": op1 first
-  transform: (op1, op2, side) -> # TODO
+  transform: (op1, op2, side) ->
+    op1 = @_ensureOp op1
+    op2 = @_ensureOp op2
+
+    op1First = side == 'right'
+
+    if side != 'left' && side != 'right'
+      throw new Error "Bad parameter 'side' given: #{side}"
+
+    op1tTextOps = textOT.transform op1.getTextOps(), op2.getTextOps(), side
+    op1tRdfOp = rdfJsonOT.transform hybridOpToRdfJsonOp(op1), hybridOpToRdfJsonOp(op2), side
+
+    new HybridOp op1tTextOps, op1tRdfOp.getTriplesToAdd(), op1tRdfOp.getTriplesToDel()
 
   # combine op1 and op2 to a single operation
   compose: (op1, op2) ->
-    rdfOp1 = new rdfJsonOT.Operation op1.getRdfInsertions(), op1.getRdfDeletions()
-    rdfOp2 = new rdfJsonOT.Operation op2.getRdfInsertions(), op2.getRdfDeletions() 
+    op1 = @_ensureOp op1
+    op2 = @_ensureOp op2
+
+    rdfOp1 = hybridOpToRdfJsonOp op1
+    rdfOp2 = hybridOpToRdfJsonOp op2
 
     textOps = textOT.compose op1.getTextOps(), op2.getTextOps()
     rdfOp = rdfJsonOT.compose rdfOp1, rdfOp2
