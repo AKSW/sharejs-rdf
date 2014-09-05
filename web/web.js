@@ -3312,7 +3312,7 @@ rdfJson = {
     if (typeof doc === 'object' && doc.triples) {
       return RdfJsonDoc.fromData(doc);
     }
-    throw new Error("Snapshot must be a rdf-json document. Given: " + doc);
+    throw new Error("Snapshot must be a rdf-json document. Given: " + (JSON.stringify(doc)));
   },
   _ensureOp: function(op) {
     if (op instanceof RdfJsonOperation) {
@@ -3321,7 +3321,7 @@ rdfJson = {
     if (typeof op === 'object' && op.triplesAdd && op.triplesDel) {
       return RdfJsonOperation.fromData(op);
     }
-    throw new Error("Operation must be a rdf-json operation. Given: " + op);
+    throw new Error("Operation must be a rdf-json operation. Given: " + (JSON.stringify(op)));
   }
 };
 
@@ -3756,10 +3756,10 @@ hybridOT = {
     if (doc instanceof HybridDoc) {
       return doc;
     }
-    if (typeof doc === 'object' && doc.turtleContent && doc.rdfContent) {
+    if (typeof doc === 'object' && doc.rdfJsonDoc) {
       return HybridDoc.fromData(doc);
     }
-    throw new Error("Snapshot must be a turtle + rdf-json hybrid document. Given: " + doc);
+    throw new Error("Snapshot must be a turtle + rdf-json hybrid document. Given: " + (JSON.stringify(doc)));
   },
   _ensureOp: function(op) {
     if (op instanceof HybridOp) {
@@ -3768,7 +3768,7 @@ hybridOT = {
     if (typeof op === 'object' && op.textOps && op.rdfInsertions && op.rdfDeletions) {
       return HybridOp.fromData(op);
     }
-    throw new Error("Operation must be a turtle + rdf-json hybrid operation. Given: " + op);
+    throw new Error("Operation must be a turtle + rdf-json hybrid operation. Given: " + (JSON.stringify(op)));
   }
 };
 

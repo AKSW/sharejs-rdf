@@ -228,13 +228,13 @@ rdfJson =
     return doc if doc instanceof RdfJsonDoc
     return RdfJsonDoc.fromData(doc) if typeof doc == 'object' && doc.triples
 
-    throw new Error("Snapshot must be a rdf-json document. Given: #{doc}")
+    throw new Error("Snapshot must be a rdf-json document. Given: #{JSON.stringify(doc)}")
 
   _ensureOp: (op) ->
     return op if op instanceof RdfJsonOperation
     return RdfJsonOperation.fromData(op) if typeof op == 'object' && op.triplesAdd && op.triplesDel
 
-    throw new Error("Operation must be a rdf-json operation. Given: #{op}")
+    throw new Error("Operation must be a rdf-json operation. Given: #{JSON.stringify(op)}")
 
 
 

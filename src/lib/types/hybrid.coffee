@@ -314,15 +314,15 @@ hybridOT =
 
   _ensureDoc: (doc) ->
     return doc if doc instanceof HybridDoc
-    return HybridDoc.fromData doc if typeof doc == 'object' && doc.turtleContent && doc.rdfContent
+    return HybridDoc.fromData doc if typeof doc == 'object' && doc.rdfJsonDoc
 
-    throw new Error("Snapshot must be a turtle + rdf-json hybrid document. Given: #{doc}")
+    throw new Error("Snapshot must be a turtle + rdf-json hybrid document. Given: #{JSON.stringify(doc)}")
 
   _ensureOp: (op) ->
     return op if op instanceof HybridOp
     return HybridOp.fromData op if typeof op == 'object' && op.textOps && op.rdfInsertions && op.rdfDeletions
 
-    throw new Error("Operation must be a turtle + rdf-json hybrid operation. Given: #{op}")
+    throw new Error("Operation must be a turtle + rdf-json hybrid operation. Given: #{JSON.stringify(op)}")
 
 
 if WEB?
