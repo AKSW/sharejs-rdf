@@ -5,7 +5,7 @@ rdfJson = require './rdf-json' if typeof WEB is 'undefined'
 rdfJson.api =
   provides: { rdfJson: true }
 
-  getData: -> rdfJson.exportTriples @snapshot.triples
+  getRdfJsonData: -> rdfJson.exportTriples @snapshot.triples
 
   insertRdfJson: (triples, callback) ->
     op = rdfJson.op.insert triples
