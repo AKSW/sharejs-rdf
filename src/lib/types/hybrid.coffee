@@ -142,6 +142,8 @@ hybridOT =
   doc: HybridDoc
   op: HybridOp
 
+  exportTriples: null # initialized at the end of this file
+
   create: () -> new HybridDoc('', {})
 
   apply: (snapshot, op) ->
@@ -341,3 +343,6 @@ else
   util = require '../util'
 
   module.exports = hybridOT
+
+
+hybridOT.exportTriples = rdfJsonOT.exportTriples

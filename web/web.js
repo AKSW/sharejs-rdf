@@ -3350,19 +3350,19 @@ rdfJson.api = {
   getData: function() {
     return rdfJson.exportTriples(this.snapshot.triples);
   },
-  insert: function(triples, callback) {
+  insertRdfJson: function(triples, callback) {
     var op;
     op = rdfJson.op.insert(triples);
     this.submitOp(op, callback);
     return op;
   },
-  "delete": function(triples, callback) {
+  deleteRdfJson: function(triples, callback) {
     var op;
     op = rdfJson.op["delete"](triples);
     this.submitOp(op, callback);
     return op;
   },
-  update: function(triplesToIns, triplesToDel, callback) {
+  updateRdfJson: function(triplesToIns, triplesToDel, callback) {
     var op;
     op = new rdfJson.op(triplesToIns, triplesToDel);
     this.submitOp(op, callback);
@@ -3588,6 +3588,7 @@ hybridOT = {
   name: 'turtle-rdf-json',
   doc: HybridDoc,
   op: HybridOp,
+  exportTriples: null,
   create: function() {
     return new HybridDoc('', {});
   },
@@ -3786,3 +3787,5 @@ if (typeof WEB !== "undefined" && WEB !== null) {
   util = require('../util');
   module.exports = hybridOT;
 }
+
+hybridOT.exportTriples = rdfJsonOT.exportTriples;
