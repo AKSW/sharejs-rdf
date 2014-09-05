@@ -27,4 +27,4 @@ rdfJson.api =
 
   _register: ->
     @on 'remoteop', (op) ->
-      @emit 'update', op.triplesAdd, op.triplesDel
+      @emit 'rdf-update', op.triplesAdd, op.triplesDel
