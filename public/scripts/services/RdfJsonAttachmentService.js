@@ -7,15 +7,15 @@ angular.module('app').factory('RdfJsonAttachmentService', ['TripleSet', function
     attachDocToEditor: function (shareDoc, scope) {
 
       var _insert = function (triple) {
-        shareDoc.insert( tripleObjectToRdfJson(triple) );
+        shareDoc.insertRdfJson( tripleObjectToRdfJson(triple) );
       };
 
       var _delete = function (triple) {
-        shareDoc.delete( tripleObjectToRdfJson(triple) );
+        shareDoc.deleteRdfJson( tripleObjectToRdfJson(triple) );
       };
 
       var _update = function (triple, previous) {
-        shareDoc.update( tripleObjectToRdfJson(triple), tripleObjectToRdfJson(previous) );
+        shareDoc.updateRdfJson( tripleObjectToRdfJson(triple), tripleObjectToRdfJson(previous) );
       };
 
 
