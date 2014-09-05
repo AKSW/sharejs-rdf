@@ -46,6 +46,17 @@ angular.module('app').directive('rdfJsonEditor', function () {
         $scope.$apply();
       });
 
+      $scope.$on('setTriples', function (e, triples) {
+        $scope.tripleSet = tripleSet = new TripleSet();
+
+        for (var i = 0; i < triples.length; i++) {
+          var triple = triples[i];
+          tripleSet.addTriple(triple.s, triple.p, triple.o);
+        }
+
+        $scope.$apply();
+      });
+
 
       $scope.setTriplesByRdfJson = function (rdfJson) {
         tripleSet = $scope.tripleSet = TripleSet.createByRdfJson(rdfJson);

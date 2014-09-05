@@ -18,14 +18,31 @@ angular.module('app').factory('RdfJsonAttachmentService', ['TripleSet', function
         shareDoc.updateRdfJson( tripleObjectToRdfJson(triple), tripleObjectToRdfJson(previous) );
       };
 
+      var updateRdfJsonEditor = function () {
+        scope.$broadcast('setTriples', rdfJsonToTriples(shareDoc.getRdfJsonData()));
+      };
 
-      scope.$broadcast('insertTriples', rdfJsonToTriples(shareDoc.getRdfJsonData()));
+
+      updateRdfJsonEditor();
 
       shareDoc.on('rdf-update', function (triplesToIns, triplesToDel) {
         console.log('rdf/json remote update: insertion: ', triplesToIns, ' | deletion: ', triplesToDel);
 
         scope.$broadcast('insertTriples', rdfJsonToTriples(triplesToIns));
         scope.$broadcast('deleteTriples', rdfJsonToTriples(triplesToDel));
+      });
+
+      // triggered by shareDoc.submitOp()
+      shareDoc.on('change', function(op) {
+        // check if op is a hybrid op:
+        if (!op.textOps) {
+          return;
+        }
+
+        // turtle contents changed
+        if (op.textOps && op.textOps.length > 0) {
+          updateRdfJsonEditor();
+        }
       });
 
       scope.$on('rdf-json-operation', function (event, operation) {
