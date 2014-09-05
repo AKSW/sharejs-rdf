@@ -1,12 +1,12 @@
 
-SparkMD5 = null
+MD5 = null
 util = null
 
 
 # === Utility functions: ===
 
 md5 = (str) ->
-  return SparkMD5.hash str
+  return MD5.hash str
 
 hashTripleObject = (obj) ->
   hashObject = (obj, properties) ->
@@ -241,11 +241,11 @@ rdfJson =
 if WEB?
   sharejs = window.sharejs
   util = sharejs.rdfUtil
-  SparkMD5 = window.SparkMD5
+  MD5 = window.SparkMD5
 
   sharejs.types ||= {}
   sharejs.types['rdf-json'] = rdfJson
 else
-  SparkMD5 = require 'spark-md5'
+  MD5 = require 'spark-md5'
   util = require '../util'
   module.exports = rdfJson

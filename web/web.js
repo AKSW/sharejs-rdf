@@ -2980,14 +2980,14 @@ api.toIRIString = function toIRIString(uri){
 }
 
 },{}]},{},[9]);
-var RdfJsonDoc, RdfJsonOperation, SparkMD5, cloneInternalTriples, exportTriples, hashTripleObject, md5, rdfJson, sharejs, util;
+var MD5, RdfJsonDoc, RdfJsonOperation, cloneInternalTriples, exportTriples, hashTripleObject, md5, rdfJson, sharejs, util;
 
-SparkMD5 = null;
+MD5 = null;
 
 util = null;
 
 md5 = function(str) {
-  return SparkMD5.hash(str);
+  return MD5.hash(str);
 };
 
 hashTripleObject = function(obj) {
@@ -3328,11 +3328,11 @@ rdfJson = {
 if (typeof WEB !== "undefined" && WEB !== null) {
   sharejs = window.sharejs;
   util = sharejs.rdfUtil;
-  SparkMD5 = window.SparkMD5;
+  MD5 = window.SparkMD5;
   sharejs.types || (sharejs.types = {});
   sharejs.types['rdf-json'] = rdfJson;
 } else {
-  SparkMD5 = require('spark-md5');
+  MD5 = require('spark-md5');
   util = require('../util');
   module.exports = rdfJson;
 }
