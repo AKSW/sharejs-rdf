@@ -5,6 +5,7 @@ hybridOT = require './hybrid' if typeof WEB is 'undefined'
 hybridOT.api =
   provides: { text: true, rdfJson: true }
 
+  getText: -> @getTurtleData()
   getTurtleData: -> @snapshot.turtleContent
   getRdfJsonData: -> hybridOT.exportTriples @snapshot.rdfJsonDoc.triples
 
@@ -45,4 +46,15 @@ hybridOT.api =
     op
 
 
-  _register: -> null # TODO
+  _register: ->
+    @on 'remoteop', (op) ->
+      @emit 'rdf-update', op.rdfInsertions, op.rdfDeletions
+      @emit 'hybrid-update', op.textOps, op.rdfInsertions, op.rdfDeletions
+
+      # glue to stay compatible with text-api:
+      if op.textOps
+        for component in op.textOps
+          if component.i != undefined
+            @emit 'insert', component.p, component.i
+          else
+            @emit 'delete', component.p, component.d

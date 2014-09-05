@@ -3347,7 +3347,7 @@ rdfJson.api = {
   provides: {
     rdfJson: true
   },
-  getData: function() {
+  getRdfJsonData: function() {
     return rdfJson.exportTriples(this.snapshot.triples);
   },
   insertRdfJson: function(triples, callback) {
@@ -3370,7 +3370,7 @@ rdfJson.api = {
   },
   _register: function() {
     return this.on('remoteop', function(op) {
-      return this.emit('update', op.triplesAdd, op.triplesDel);
+      return this.emit('rdf-update', op.triplesAdd, op.triplesDel);
     });
   }
 };
@@ -3789,3 +3789,85 @@ if (typeof WEB !== "undefined" && WEB !== null) {
 }
 
 hybridOT.exportTriples = rdfJsonOT.exportTriples;
+
+var hybridOT;
+
+if (typeof WEB === 'undefined') {
+  hybridOT = require('./hybrid');
+}
+
+hybridOT.api = {
+  provides: {
+    text: true,
+    rdfJson: true
+  },
+  getText: function() {
+    return this.getTurtleData();
+  },
+  getTurtleData: function() {
+    return this.snapshot.turtleContent;
+  },
+  getRdfJsonData: function() {
+    return hybridOT.exportTriples(this.snapshot.rdfJsonDoc.triples);
+  },
+  insert: function(pos, text, callback) {
+    var op;
+    op = new hybridOT.op([
+      {
+        p: pos,
+        i: text
+      }
+    ], {}, {});
+    this.submitOp(op, callback);
+    return op;
+  },
+  del: function(pos, length, callback) {
+    var op;
+    op = new hybridOT.op([
+      {
+        p: pos,
+        d: this.snapshot.slice(pos, pos + length)
+      }
+    ], {}, {});
+    this.submitOp(op, callback);
+    return op;
+  },
+  insertRdfJson: function(rdfJson, callback) {
+    var op;
+    op = new hybridOT.op([], rdfJson, {});
+    this.submitOp(op, callback);
+    return op;
+  },
+  deleteRdfJson: function(rdfJson, callback) {
+    var op;
+    op = new hybridOT.op([], {}, rdfJson);
+    this.submitOp(op, callback);
+    return op;
+  },
+  updateRdfJson: function(rdfJsonInsertions, rdfJsonDeletions, callback) {
+    var op;
+    op = new hybridOT.op([], rdfJsonInsertions, rdfJsonDeletions);
+    this.submitOp(op, callback);
+    return op;
+  },
+  _register: function() {
+    return this.on('remoteop', function(op) {
+      var component, _i, _len, _ref, _results;
+      this.emit('rdf-update', op.rdfInsertions, op.rdfDeletions);
+      this.emit('hybrid-update', op.textOps, op.rdfInsertions, op.rdfDeletions);
+      if (op.textOps) {
+        _ref = op.textOps;
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          component = _ref[_i];
+          if (component.i !== void 0) {
+            _results.push(this.emit('insert', component.p, component.i));
+          } else {
+            _results.push(this.emit('delete', component.p, component.d));
+          }
+        }
+        return _results;
+      }
+    });
+  }
+};
