@@ -21,7 +21,7 @@ angular.module('app').factory('RdfJsonAttachmentService', ['TripleSet', function
 
       scope.$broadcast('insertTriples', rdfJsonToTriples(shareDoc.getData()));
 
-      shareDoc.on('update', function (triplesToIns, triplesToDel) {
+      shareDoc.on('rdf-update', function (triplesToIns, triplesToDel) {
         console.log('rdf/json remote update: insertion: ', triplesToIns, ' | deletion: ', triplesToDel);
 
         scope.$broadcast('insertTriples', rdfJsonToTriples(triplesToIns));
