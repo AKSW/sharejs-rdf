@@ -19,7 +19,7 @@ hybridOT.api =
     op
 
   del: (pos, length, callback) ->
-    op = new hybridOT.op [{p:pos, d:@snapshot[pos...(pos + length)]}], {}, {}
+    op = new hybridOT.op [{p:pos, d:@snapshot.turtleContent[pos...(pos + length)]}], {}, {}
 
     @submitOp op, callback
     op
