@@ -65,7 +65,8 @@ module.exports = (grunt) ->
           'lib/types/rdf-json-api.js',
           'lib/types/hybrid.js',
           'lib/types/hybrid-api.js',
-          'lib/util.js'
+          'lib/util.js',
+          'lib/web-postlude.js'
         ]
         dest: 'web/web.js'
     uglify:

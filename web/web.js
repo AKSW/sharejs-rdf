@@ -5,6 +5,8 @@
 */
 var WEB = true;
 
+(function () {
+
 /*jshint bitwise:false*/
 /*global unescape*/
 
@@ -4151,3 +4153,6 @@ if (typeof WEB !== "undefined" && WEB !== null) {
   SparkMD5 = require('spark-md5');
   module.exports = util;
 }
+
+
+})();
