@@ -4,7 +4,12 @@ angular.module('app').factory('RdfJsonAttachmentService', ['TripleSet', function
   var failedInsertion = null;
 
   var AttachmentService = {
-    attachDocToEditor: function (shareDoc, scope) {
+    /**
+     * @param {object} shareDoc
+     * @param {object} scope
+     * @param {object} [cmEditor]
+     */
+    attachDocToEditor: function (shareDoc, scope, cmEditor) {
 
       var _insert = function (triple) {
         shareDoc.insertRdfJson( tripleObjectToRdfJson(triple) );
@@ -20,6 +25,12 @@ angular.module('app').factory('RdfJsonAttachmentService', ['TripleSet', function
 
       var updateRdfJsonEditor = function () {
         scope.$broadcast('setTriples', rdfJsonToTriples(shareDoc.getRdfJsonData()));
+      };
+
+      var updateTextEditor = function () {
+        if (cmEditor) {
+          cmEditor.setValue(shareDoc.getTurtleData());
+        }
       };
 
 
@@ -42,6 +53,11 @@ angular.module('app').factory('RdfJsonAttachmentService', ['TripleSet', function
         // turtle contents changed
         if (op.textOps && op.textOps.length > 0) {
           updateRdfJsonEditor();
+        }
+
+        // rdf contents changed
+        if (op.rdfInsertions && op.rdfDeletions && (!rdfJsonEmpty(op.rdfInsertions) || !rdfJsonEmpty(op.rdfDeletions))) {
+          updateTextEditor();
         }
       });
 
@@ -86,6 +102,21 @@ angular.module('app').factory('RdfJsonAttachmentService', ['TripleSet', function
     var tripleSet = TripleSet.createByRdfJson(rdfJson);
 
     return tripleSet.getTriples();
+  };
+
+  var rdfJsonEmpty = function (rdfJson) {
+    var tripleCount = 0;
+
+    for (var subjUri in rdfJson) {
+      var predicates = rdfJson[subjUri];
+
+      for (var predUri in predicates) {
+        var objects = predicates[predUri];
+        tripleCount += objects.length;
+      }
+    }
+
+    return tripleCount === 0;
   };
 
 
