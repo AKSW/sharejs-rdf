@@ -45,6 +45,7 @@ arrayFilter = (array, callback) ->
   resultArray
 
 
+# @returns [pos, length, oldText, newText]
 removeTripleFromTurtleBlock = (turtleContent, block, blockContentParsed, s, p, o) ->
   tripleRdfJson = {}
   tripleRdfJson[s] = {}
@@ -53,15 +54,16 @@ removeTripleFromTurtleBlock = (turtleContent, block, blockContentParsed, s, p, o
   blockStringified = util.rdfJsonToTurtle blockContentParsed
 
   start = block.start
-  end = block.start + block.length - 1
-  if turtleContent.substr(end + 1, 2) == "\r\n"
-    end += 2
+  length = block.length
+  if turtleContent.substr(start + length, 2) == "\r\n"
+    length += 2
   else
-    end++ if turtleContent.charAt(end + 1) == "\n"
+    length++ if turtleContent.charAt(start + length) == "\n"
 
-  turtleContent = turtleContent.substr(0, start) + blockStringified + turtleContent.substr(end + 1)
+  [start, length, turtleContent.substr(start, length), blockStringified]
 
 
+# @returns [pos, length, oldText, newText]
 removeTripleFromTurtle = (turtleContent, s, p, o) ->
   if s.substr(0, 2) != "_:"
     _s = "<" + s + ">"
@@ -71,19 +73,20 @@ removeTripleFromTurtle = (turtleContent, s, p, o) ->
   potentialBlocks = arrayFilter blocks, (block) -> block.subject == _s
 
   successfulDeletion = false
+  deletion = [0, 0, '', '']
   for block in potentialBlocks
     blockContent = turtleContent.substr(block.start, block.length)
     blockParsed = hybridOT._parseTurtle blockContent
 
     if util.triplesContain blockParsed, s, p, o
-      turtleContent = removeTripleFromTurtleBlock turtleContent, block, blockParsed, s, p, o
+      deletion = removeTripleFromTurtleBlock turtleContent, block, blockParsed, s, p, o
       successfulDeletion = true
       break
 
   if !successfulDeletion
     console.warn 'Unable to find the triple (s: <' + s + '>, p: <' + p + '>, o: ' + JSON.stringify(o) + ') for deletion in: ' + turtleContent
 
-  return turtleContent
+  return deletion
 
 
 hybridOpToRdfJsonOp = (op) ->
@@ -137,6 +140,135 @@ class HybridOp
   setRdfDeletions: (rdfDeletions) -> @rdfDeletions = rdfDeletions
 
 
+# transforms turtle changes to rdf/json changes and vice versa
+# applies these to the given snapshot
+class RdfJsonTurtleSync
+  constructor: (snapshot, op) ->
+    @snapshot = snapshot
+    @op = op
+    @textDoc = snapshot.getTurtleContent()
+    @textDocParsed = null
+    @rdfDoc = snapshot.getRdfJsonDoc()
+    @originalRdfDoc = @rdfDoc
+
+  apply: ->
+    @textDoc = textOT.apply @textDoc, @op.getTextOps()
+
+    rdfOp = new rdfJsonOT.op @op.getRdfInsertions(), @op.getRdfDeletions()
+    @rdfDoc = rdfJsonOT.apply @rdfDoc, rdfOp
+
+    @textDocParsed = @_parseTurtleAndCommentedTripleOps()
+
+    if @textDocParsed
+      @_applyTurtleChanges()
+    else
+      @_applyChangesToTurtle @op.getRdfInsertions(), @op.getRdfDeletions()
+
+    @getSyncedDocs()
+
+  getSyncedDocs: -> [@textDoc, @rdfDoc]
+
+  _appendToTextDoc: (text) ->
+    @textDoc += text
+
+  _replaceInTextDoc: (pos, length, oldContent, newContent) ->
+    throw new Error('Turtle deletion: Text has changed @'+pos+' (length '+length+')') if @textDoc.substr(pos, length) != oldContent
+    @textDoc = @textDoc.substr(0, pos) + newContent + @textDoc.substr(pos + length)
+
+  _changeRdfDoc: (triplesToInsert, triplesToDelete) ->
+    rdfOp = new rdfJsonOT.op triplesToInsert, triplesToDelete
+    @rdfDoc = rdfJsonOT.apply @rdfDoc, rdfOp
+
+  _applyTurtleChanges: ->
+    op = @op
+
+    inserted1 = util.triplesDifference @textDocParsed, @originalRdfDoc.exportTriples()
+    inserted2 = util.triplesDifference @textDocParsed, @rdfDoc.exportTriples()
+    triplesInsertedInTurtle = util.triplesIntersect inserted1, inserted2
+
+    deleted1 = util.triplesDifference @originalRdfDoc.exportTriples(), @textDocParsed
+    deleted2 = util.triplesDifference @rdfDoc.exportTriples(), @textDocParsed
+    triplesDeletedInTurtle = util.triplesIntersect deleted1, deleted2
+
+    [triplesInsertedInTurtle, triplesDeletedInTurtle, revertTurtleInsertions, revertTurtleDeletions] =
+      @_eliminateOppositions triplesInsertedInTurtle, triplesDeletedInTurtle
+
+    # Problem: No matter what we eliminate, the op's turtle changes have already been made
+    # Solution: Let's undo these changes
+
+    triplesToInsertInTurtle = util.triplesDifference op.getRdfInsertions(), triplesInsertedInTurtle
+    triplesToInsertInTurtle = util.triplesUnion triplesToInsertInTurtle, revertTurtleDeletions
+    triplesToDeleteInTurtle = util.triplesDifference op.getRdfDeletions(), triplesDeletedInTurtle
+    triplesToDeleteInTurtle = util.triplesUnion triplesToDeleteInTurtle, revertTurtleInsertions
+
+    @_applyChangesToTurtle triplesToInsertInTurtle, triplesToDeleteInTurtle
+    @_changeRdfDoc triplesInsertedInTurtle, triplesDeletedInTurtle
+
+  _applyChangesToRdf: (rdfDoc, triplesToInsert, triplesToDelete) ->
+    rdfOp = new rdfJsonOT.op triplesToInsert, triplesToDelete
+    rdfDoc = rdfJsonOT.apply rdfDoc, rdfOp
+
+    rdfDoc
+
+  _applyChangesToTurtle: (triplesToInsert, triplesToDelete) ->
+    if @textDocParsed
+      for triple in util.rdfJsonToArray triplesToInsert
+        @_appendToTextDoc "\n" + util.tripleToTurtle(triple.s, triple.p, triple.o)
+
+      for triple in util.rdfJsonToArray triplesToDelete
+        [start, length, oldContent, newContent] = removeTripleFromTurtle @textDoc, triple.s, triple.p, triple.o
+        @_replaceInTextDoc start, length, oldContent, newContent
+    else
+      for triple in util.rdfJsonToArray(triplesToInsert)
+        @_appendToTextDoc "\n### insert triple ### " + util.tripleToTurtle(triple.s, triple.p, triple.o)
+
+      for triple in util.rdfJsonToArray(triplesToDelete)
+        @_appendToTextDoc "\n### delete triple ### " + util.tripleToTurtle(triple.s, triple.p, triple.o)
+
+  _eliminateOppositions: (turtleInsertions, turtleDeletions) ->
+    revertTurtleInsertions = {}
+    revertTurtleDeletions = {}
+
+    intersection = util.triplesIntersect @op.getRdfInsertions(), turtleDeletions
+    if !util.isTriplesEmpty(intersection)
+      @op.setRdfInsertions util.triplesDifference(@op.getRdfInsertions(), intersection)
+      turtleDeletions = util.triplesDifference turtleDeletions, intersection
+      revertTurtleDeletions = intersection
+
+    intersection = util.triplesIntersect @op.getRdfDeletions(), turtleInsertions
+    if !util.isTriplesEmpty(intersection)
+      @op.setRdfDeletions util.triplesDifference(@op.getRdfDeletions(), intersection)
+      turtleInsertions = util.triplesDifference turtleInsertions, intersection
+      revertTurtleInsertions = intersection
+
+    [turtleInsertions, turtleDeletions, revertTurtleInsertions, revertTurtleDeletions]
+
+  _processTurtleCommentedTripleOps: (turtleDoc) ->
+    triplesToInsert = {}
+    triplesToDelete = {}
+
+    while matches = turtleDoc.match /\n### (insert|delete) triple ### ([^\n]+ \.)$/
+      rdfJsonTriple = @_parseTurtle matches[2]
+      switch matches[1]
+        when 'insert' then triplesToInsert = util.triplesUnion triplesToInsert, rdfJsonTriple
+        when 'delete' then triplesToDelete = util.triplesUnion triplesToDelete, rdfJsonTriple
+      turtleDoc = turtleDoc.replace matches[0], ''
+
+    [turtleDoc, triplesToInsert, triplesToDelete]
+
+  _parseTurtleAndCommentedTripleOps: ->
+    [@textDoc, triplesToInsert, triplesToDelete] = @_processTurtleCommentedTripleOps @textDoc
+
+    if !util.isTriplesEmpty(triplesToInsert) || !util.isTriplesEmpty(triplesToDelete)
+      @textDocParsed = @_parseTurtle @textDoc
+      if @textDocParsed
+        @_applyChangesToTurtle triplesToInsert, triplesToDelete
+
+    return @_parseTurtle @textDoc
+
+  _parseTurtle: (turtleContents) -> hybridOT._parseTurtle turtleContents
+
+
 hybridOT =
   name: 'turtle-rdf-json'
   doc: HybridDoc
@@ -144,13 +276,14 @@ hybridOT =
 
   exportTriples: null # initialized at the end of this file
 
-  create: () -> new HybridDoc('', {})
+  create: -> new HybridDoc('', {})
 
   apply: (snapshot, op) ->
     snapshot = @_ensureDoc snapshot
     op = @_ensureOp op
 
-    [textDoc, rdfDoc] = @syncDocuments snapshot, op
+    sync = new RdfJsonTurtleSync snapshot, op
+    [textDoc, rdfDoc] = sync.apply()
 
     return new HybridDoc textDoc, rdfDoc
 
@@ -189,115 +322,6 @@ hybridOT =
 
     new HybridOp textOps, rdfOp.getInsertions(), rdfOp.getDeletions()
 
-  # applies turtle and rdf/json changes to the snapshot and
-  # translates turtle <-> rdf/json operations, so that the
-  # documents stay synchronized
-  syncDocuments: (snapshot, op) ->
-    snapshot = @_ensureDoc snapshot
-    op = @_ensureOp op
-
-    rdfDocBefore = snapshot.getRdfJsonDoc()
-
-    textDocAfter = textOT.apply snapshot.getTurtleContent(), op.getTextOps()
-    rdfOp = new rdfJsonOT.op op.getRdfInsertions(), op.getRdfDeletions()
-    rdfDocAfter = rdfJsonOT.apply snapshot.getRdfJsonDoc(), rdfOp
-
-    [textDocAfter, textDocAfterParsed] = @_parseTurtleAndCommentedTripleOps textDocAfter
-
-    if textDocAfterParsed
-      [textDocAfter, rdfDocAfter] = @_applyTurtleChanges op, rdfDocBefore, rdfDocAfter, textDocAfter, textDocAfterParsed
-    else
-      textDocAfter = @_applyChangesToTurtle(textDocAfter, null, op.getRdfInsertions(), op.getRdfDeletions())
-
-    [textDocAfter, rdfDocAfter]
-
-  _applyTurtleChanges: (op, rdfDocBefore, rdfDocAfter, textDocAfter, textDocAfterParsed) ->
-    inserted1 = util.triplesDifference textDocAfterParsed, rdfDocBefore.exportTriples()
-    inserted2 = util.triplesDifference textDocAfterParsed, rdfDocAfter.exportTriples()
-    triplesInsertedInTurtle = util.triplesIntersect inserted1, inserted2
-
-    deleted1 = util.triplesDifference rdfDocBefore.exportTriples(), textDocAfterParsed
-    deleted2 = util.triplesDifference rdfDocAfter.exportTriples(), textDocAfterParsed
-    triplesDeletedInTurtle = util.triplesIntersect deleted1, deleted2
-
-    [op, triplesInsertedInTurtle, triplesDeletedInTurtle, revertTurtleInsertions, revertTurtleDeletions] =
-      @_eliminateOppositions op, triplesInsertedInTurtle, triplesDeletedInTurtle
-
-    # Problem: No matter what we eliminate, the op's turtle changes have already been made
-    # Solution: Let's undo these changes
-
-    triplesToInsertInTurtle = util.triplesDifference op.getRdfInsertions(), triplesInsertedInTurtle
-    triplesToInsertInTurtle = util.triplesUnion triplesToInsertInTurtle, revertTurtleDeletions
-    triplesToDeleteInTurtle = util.triplesDifference op.getRdfDeletions(), triplesDeletedInTurtle
-    triplesToDeleteInTurtle = util.triplesUnion triplesToDeleteInTurtle, revertTurtleInsertions
-
-    textDocAfter = @_applyChangesToTurtle textDocAfter, textDocAfterParsed, triplesToInsertInTurtle, triplesToDeleteInTurtle
-    rdfDocAfter = @_applyChangesToRdf rdfDocAfter, triplesInsertedInTurtle, triplesDeletedInTurtle
-
-    [textDocAfter, rdfDocAfter]
-
-  _applyChangesToRdf: (rdfDoc, triplesToInsert, triplesToDelete) ->
-    rdfOp = new rdfJsonOT.op triplesToInsert, triplesToDelete
-    rdfDoc = rdfJsonOT.apply rdfDoc, rdfOp
-    rdfDoc
-
-  _applyChangesToTurtle: (turtleDoc, turtleDocParsed, triplesToInsert, triplesToDelete) ->
-    if turtleDocParsed
-      for triple in util.rdfJsonToArray triplesToInsert
-        turtleDoc += "\n" + util.tripleToTurtle(triple.s, triple.p, triple.o)
-
-      for triple in util.rdfJsonToArray triplesToDelete
-        turtleDoc = removeTripleFromTurtle turtleDoc, triple.s, triple.p, triple.o
-    else
-      for triple in util.rdfJsonToArray(triplesToInsert)
-        turtleDoc += "\n### insert triple ### " + util.tripleToTurtle(triple.s, triple.p, triple.o)
-
-      for triple in util.rdfJsonToArray(triplesToDelete)
-        turtleDoc += "\n### delete triple ### " + util.tripleToTurtle(triple.s, triple.p, triple.o)
-
-    turtleDoc
-
-  _eliminateOppositions: (op, turtleInsertions, turtleDeletions) ->
-    revertTurtleInsertions = {}
-    revertTurtleDeletions = {}
-
-    intersection = util.triplesIntersect op.getRdfInsertions(), turtleDeletions
-    if !util.isTriplesEmpty(intersection)
-      op.setRdfInsertions util.triplesDifference(op.getRdfInsertions(), intersection)
-      turtleDeletions = util.triplesDifference turtleDeletions, intersection
-      revertTurtleDeletions = intersection
-
-    intersection = util.triplesIntersect op.getRdfDeletions(), turtleInsertions
-    if !util.isTriplesEmpty(intersection)
-      op.setRdfDeletions util.triplesDifference(op.getRdfDeletions(), intersection)
-      turtleInsertions = util.triplesDifference turtleInsertions, intersection
-      revertTurtleInsertions = intersection
-
-    [op, turtleInsertions, turtleDeletions, revertTurtleInsertions, revertTurtleDeletions]
-
-  _processTurtleCommentedTripleOps: (turtleDoc) ->
-    triplesToInsert = {}
-    triplesToDelete = {}
-
-    while matches = turtleDoc.match /\n### (insert|delete) triple ### ([^\n]+ \.)$/
-      rdfJsonTriple = @_parseTurtle matches[2]
-      switch matches[1]
-        when 'insert' then triplesToInsert = util.triplesUnion triplesToInsert, rdfJsonTriple
-        when 'delete' then triplesToDelete = util.triplesUnion triplesToDelete, rdfJsonTriple
-      turtleDoc = turtleDoc.replace matches[0], ''
-
-    [turtleDoc, triplesToInsert, triplesToDelete]
-
-  _parseTurtleAndCommentedTripleOps: (turtleDoc) ->
-    _turtleDoc = turtleDoc
-    [turtleDoc, triplesToInsert, triplesToDelete] = @_processTurtleCommentedTripleOps turtleDoc
-
-    if !util.isTriplesEmpty(triplesToInsert) || !util.isTriplesEmpty(triplesToDelete)
-      turtleDocParsed = @_parseTurtle turtleDoc
-      if turtleDocParsed
-        turtleDoc = @_applyChangesToTurtle turtleDoc, turtleDocParsed, triplesToInsert, triplesToDelete
-
-    return [turtleDoc, @_parseTurtle turtleDoc]
 
   _parseTurtle: (turtleContents) ->
     parser = new rdf.TurtleParser
