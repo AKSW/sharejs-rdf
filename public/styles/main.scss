@@ -92,6 +92,10 @@ body {
     }
 }
 
+.container > .body {
+  margin-bottom: 20px;
+}
+
 /* Alerts */
 
 #alerts {
@@ -110,6 +114,14 @@ body {
 /* Code Mirror Editor */
 
 .CodeMirror {
-  margin: 20px 0;
+  height: 200px;
+  margin: 0;
   border: 1px solid #eee;
+}
+
+
+/* Share.js Config Panel */
+
+#sharejs-config {
+  margin-bottom: 20px;
 }
