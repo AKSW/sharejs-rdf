@@ -40,7 +40,7 @@ angular.module('app').directive('rdfJsonEditor', function () {
       $scope.$on('deleteTriples', function (e, triples) {
         for (var i = 0; i < triples.length; i++) {
           var triple = triples[i];
-          $scope.removeTriple(triple.s, triple.p, triple.o);
+          tripleSet.removeTripleBySPO(triple.s, triple.p, triple.o);
         }
 
         $scope.$apply();
