@@ -11,8 +11,8 @@ angular.module('app').directive('hybridEditor', function () {
 
       var turtleEditor;
 
-      $scope.codemirrorLoaded = function (_editor) {
-        turtleEditor = _editor;
+      $scope.codemirrorLoaded = function (editor) {
+        turtleEditor = editor;
       };
 
       $scope.connect = function () {
@@ -34,7 +34,7 @@ angular.module('app').directive('hybridEditor', function () {
           }
 
           doc.attach_cm(turtleEditor);
-          RdfJsonAttachmentService.attachDocToEditor(doc, $scope, turtleEditor);
+          RdfJsonAttachmentService.attachDocToEditor(doc, $scope);
 
           AlertService.success('Connected to ' + serverUrl + '#' + docName);
         });

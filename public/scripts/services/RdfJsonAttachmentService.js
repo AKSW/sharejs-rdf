@@ -9,7 +9,7 @@ angular.module('app').factory('RdfJsonAttachmentService', ['TripleSet', function
      * @param {object} scope
      * @param {object} [cmEditor]
      */
-    attachDocToEditor: function (shareDoc, scope, cmEditor) {
+    attachDocToEditor: function (shareDoc, scope) {
 
       var _insert = function (triple) {
         shareDoc.insertRdfJson( tripleObjectToRdfJson(triple) );
@@ -27,37 +27,16 @@ angular.module('app').factory('RdfJsonAttachmentService', ['TripleSet', function
         scope.$broadcast('setTriples', rdfJsonToTriples(shareDoc.getRdfJsonData()));
       };
 
-      var updateTextEditor = function () {
-        if (cmEditor) {
-          cmEditor.setValue(shareDoc.getTurtleData());
-        }
-      };
 
-
+      // initial set-up of rdf/json editor
       updateRdfJsonEditor();
 
       shareDoc.on('rdf-update', function (triplesToIns, triplesToDel) {
-        console.log('rdf/json remote update: insertion: ', triplesToIns, ' | deletion: ', triplesToDel);
-
-        scope.$broadcast('insertTriples', rdfJsonToTriples(triplesToIns));
-        scope.$broadcast('deleteTriples', rdfJsonToTriples(triplesToDel));
-      });
-
-      // triggered by shareDoc.submitOp()
-      shareDoc.on('change', function(op) {
-        // check if op is a hybrid op:
-        if (!op.textOps) {
-          return;
+        if (!rdfJsonEmpty(triplesToIns)) {
+          scope.$broadcast('insertTriples', rdfJsonToTriples(triplesToIns));
         }
-
-        // turtle contents changed
-        if (op.textOps && op.textOps.length > 0) {
-          updateRdfJsonEditor();
-        }
-
-        // rdf contents changed
-        if (op.rdfInsertions && op.rdfDeletions && (!rdfJsonEmpty(op.rdfInsertions) || !rdfJsonEmpty(op.rdfDeletions))) {
-          updateTextEditor();
+        if (!rdfJsonEmpty(triplesToDel)) {
+          scope.$broadcast('deleteTriples', rdfJsonToTriples(triplesToDel));
         }
       });
 
