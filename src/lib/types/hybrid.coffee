@@ -45,7 +45,7 @@ arrayFilter = (array, callback) ->
   resultArray
 
 
-# @returns [pos, length, oldText, newText]
+# @returns [pos, oldText, newText]
 removeTripleFromTurtleBlock = (turtleContent, block, blockContentParsed, s, p, o) ->
   tripleRdfJson = {}
   tripleRdfJson[s] = {}
@@ -60,10 +60,10 @@ removeTripleFromTurtleBlock = (turtleContent, block, blockContentParsed, s, p, o
   else
     length++ if turtleContent.charAt(start + length) == "\n"
 
-  [start, length, turtleContent.substr(start, length), blockStringified]
+  [start, turtleContent.substr(start, length), blockStringified]
 
 
-# @returns [pos, length, oldText, newText]
+# @returns [pos, oldText, newText]
 removeTripleFromTurtle = (turtleContent, s, p, o) ->
   if s.substr(0, 2) != "_:"
     _s = "<" + s + ">"
@@ -73,7 +73,7 @@ removeTripleFromTurtle = (turtleContent, s, p, o) ->
   potentialBlocks = arrayFilter blocks, (block) -> block.subject == _s
 
   successfulDeletion = false
-  deletion = [0, 0, '', '']
+  deletion = [0, '', '']
   for block in potentialBlocks
     blockContent = turtleContent.substr(block.start, block.length)
     blockParsed = hybridOT._parseTurtle blockContent
@@ -168,14 +168,29 @@ class RdfJsonTurtleSync
 
   getSyncedDocs: -> [@textDoc, @rdfDoc]
 
+  _emit: (args...) ->
+    hybridOT.registeredDocsEmit.apply hybridOT, args
+
   _appendToTextDoc: (text) ->
+    #return @textDoc if !text
+
+    @_emit 'sync-text-insert', { p: @textDoc.length, i:text }
     @textDoc += text
 
-  _replaceInTextDoc: (pos, length, oldContent, newContent) ->
-    throw new Error('Turtle deletion: Text has changed @'+pos+' (length '+length+')') if @textDoc.substr(pos, length) != oldContent
-    @textDoc = @textDoc.substr(0, pos) + newContent + @textDoc.substr(pos + length)
+  _replaceInTextDoc: (pos, oldContent, newContent) ->
+    #return @textDoc if newContent == oldContent
+
+    textAtPos = @textDoc.substr(pos, oldContent.length)
+    if textAtPos != oldContent
+      throw new Error("Turtle deletion: Text has changed @#{pos}.\nExpected: #{oldContent}\nGot: #{textAtPos}")
+
+    @_emit 'sync-text-replace', { p: pos, d: oldContent, i:newContent }
+    @textDoc = @textDoc.substr(0, pos) + newContent + @textDoc.substr(pos + oldContent.length)
 
   _changeRdfDoc: (triplesToInsert, triplesToDelete) ->
+    #return @rdfDoc if util.isTriplesEmpty(triplesToInsert) && util.isTriplesEmpty(triplesToDelete)
+
+    @_emit 'sync-rdf', { i:triplesToInsert, d:triplesToDelete }
     rdfOp = new rdfJsonOT.op triplesToInsert, triplesToDelete
     @rdfDoc = rdfJsonOT.apply @rdfDoc, rdfOp
 
@@ -216,8 +231,8 @@ class RdfJsonTurtleSync
         @_appendToTextDoc "\n" + util.tripleToTurtle(triple.s, triple.p, triple.o)
 
       for triple in util.rdfJsonToArray triplesToDelete
-        [start, length, oldContent, newContent] = removeTripleFromTurtle @textDoc, triple.s, triple.p, triple.o
-        @_replaceInTextDoc start, length, oldContent, newContent
+        [pos, oldContent, newContent] = removeTripleFromTurtle @textDoc, triple.s, triple.p, triple.o
+        @_replaceInTextDoc pos, oldContent, newContent
     else
       for triple in util.rdfJsonToArray(triplesToInsert)
         @_appendToTextDoc "\n### insert triple ### " + util.tripleToTurtle(triple.s, triple.p, triple.o)
@@ -274,7 +289,16 @@ hybridOT =
   doc: HybridDoc
   op: HybridOp
 
+  registeredDocs: []
+
   exportTriples: null # initialized at the end of this file
+
+  # register a document to be notified about changes made by RdfJsonTurtleSync
+  registerDoc: (doc) ->
+    @registeredDocs.push doc
+
+  registeredDocsEmit: (args...) ->
+    doc.emit.apply doc, args for doc in @registeredDocs
 
   create: -> new HybridDoc('', {})
 

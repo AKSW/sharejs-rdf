@@ -47,6 +47,8 @@ hybridOT.api =
 
 
   _register: ->
+    hybridOT.registerDoc this
+
     @on 'remoteop', (op) ->
       @emit 'rdf-update', op.rdfInsertions, op.rdfDeletions
       @emit 'hybrid-update', op.textOps, op.rdfInsertions, op.rdfDeletions
@@ -58,3 +60,15 @@ hybridOT.api =
             @emit 'insert', component.p, component.i
           else
             @emit 'delete', component.p, component.d
+
+    # intra-op sync data changes:
+
+    @on 'sync-text-insert', (op) ->
+      @emit 'insert', op.p, op.i
+
+    @on 'sync-text-replace', (op) ->
+      @emit 'insert', op.p, op.i
+      @emit 'delete', op.p + op.i.length, op.d
+
+    @on 'sync-rdf', (op) ->
+      @emit 'rdf-update', op.i, op.d
