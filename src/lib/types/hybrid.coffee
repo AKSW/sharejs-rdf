@@ -227,18 +227,22 @@ class RdfJsonTurtleSync
 
   _applyChangesToTurtle: (triplesToInsert, triplesToDelete) ->
     if @textDocParsed
+      textToAppend = ""
       for triple in util.rdfJsonToArray triplesToInsert
-        @_appendToTextDoc "\n" + util.tripleToTurtle(triple.s, triple.p, triple.o)
+        textToAppend += "\n" + util.tripleToTurtle(triple.s, triple.p, triple.o)
+      @_appendToTextDoc textToAppend
 
       for triple in util.rdfJsonToArray triplesToDelete
         [pos, oldContent, newContent] = removeTripleFromTurtle @textDoc, triple.s, triple.p, triple.o
         @_replaceInTextDoc pos, oldContent, newContent
     else
+      textToAppend = ""
       for triple in util.rdfJsonToArray(triplesToInsert)
-        @_appendToTextDoc "\n### insert triple ### " + util.tripleToTurtle(triple.s, triple.p, triple.o)
+        textToAppend += "\n### insert triple ### " + util.tripleToTurtle(triple.s, triple.p, triple.o)
 
       for triple in util.rdfJsonToArray(triplesToDelete)
-        @_appendToTextDoc "\n### delete triple ### " + util.tripleToTurtle(triple.s, triple.p, triple.o)
+        textToAppend += "\n### delete triple ### " + util.tripleToTurtle(triple.s, triple.p, triple.o)
+      @_appendToTextDoc textToAppend
 
   _eliminateOppositions: (turtleInsertions, turtleDeletions) ->
     revertTurtleInsertions = {}
