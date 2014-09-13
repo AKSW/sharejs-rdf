@@ -3623,6 +3623,9 @@ RdfJsonTurtleSync = (function() {
   };
 
   RdfJsonTurtleSync.prototype._appendToTextDoc = function(text) {
+    if (!text) {
+      return this.textDoc;
+    }
     this._emit('sync-text-insert', {
       p: this.textDoc.length,
       i: text
@@ -3632,6 +3635,9 @@ RdfJsonTurtleSync = (function() {
 
   RdfJsonTurtleSync.prototype._replaceInTextDoc = function(pos, oldContent, newContent) {
     var textAtPos;
+    if (newContent === oldContent) {
+      return this.textDoc;
+    }
     textAtPos = this.textDoc.substr(pos, oldContent.length);
     if (textAtPos !== oldContent) {
       throw new Error("Turtle deletion: Text has changed @" + pos + ".\nExpected: " + oldContent + "\nGot: " + textAtPos);
@@ -3646,6 +3652,9 @@ RdfJsonTurtleSync = (function() {
 
   RdfJsonTurtleSync.prototype._changeRdfDoc = function(triplesToInsert, triplesToDelete) {
     var rdfOp;
+    if (util.isTriplesEmpty(triplesToInsert) && util.isTriplesEmpty(triplesToDelete)) {
+      return this.rdfDoc;
+    }
     this._emit('sync-rdf', {
       i: triplesToInsert,
       d: triplesToDelete
@@ -3680,13 +3689,15 @@ RdfJsonTurtleSync = (function() {
   };
 
   RdfJsonTurtleSync.prototype._applyChangesToTurtle = function(triplesToInsert, triplesToDelete) {
-    var newContent, oldContent, pos, triple, _i, _j, _k, _l, _len, _len1, _len2, _len3, _ref, _ref1, _ref2, _ref3, _ref4, _results, _results1;
+    var newContent, oldContent, pos, textToAppend, triple, _i, _j, _k, _l, _len, _len1, _len2, _len3, _ref, _ref1, _ref2, _ref3, _ref4, _results;
     if (this.textDocParsed) {
+      textToAppend = "";
       _ref = util.rdfJsonToArray(triplesToInsert);
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         triple = _ref[_i];
-        this._appendToTextDoc("\n" + util.tripleToTurtle(triple.s, triple.p, triple.o));
+        textToAppend += "\n" + util.tripleToTurtle(triple.s, triple.p, triple.o);
       }
+      this._appendToTextDoc(textToAppend);
       _ref1 = util.rdfJsonToArray(triplesToDelete);
       _results = [];
       for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
@@ -3696,18 +3707,18 @@ RdfJsonTurtleSync = (function() {
       }
       return _results;
     } else {
+      textToAppend = "";
       _ref3 = util.rdfJsonToArray(triplesToInsert);
       for (_k = 0, _len2 = _ref3.length; _k < _len2; _k++) {
         triple = _ref3[_k];
-        this._appendToTextDoc("\n### insert triple ### " + util.tripleToTurtle(triple.s, triple.p, triple.o));
+        textToAppend += "\n### insert triple ### " + util.tripleToTurtle(triple.s, triple.p, triple.o);
       }
       _ref4 = util.rdfJsonToArray(triplesToDelete);
-      _results1 = [];
       for (_l = 0, _len3 = _ref4.length; _l < _len3; _l++) {
         triple = _ref4[_l];
-        _results1.push(this._appendToTextDoc("\n### delete triple ### " + util.tripleToTurtle(triple.s, triple.p, triple.o)));
+        textToAppend += "\n### delete triple ### " + util.tripleToTurtle(triple.s, triple.p, triple.o);
       }
-      return _results1;
+      return this._appendToTextDoc(textToAppend);
     }
   };
 

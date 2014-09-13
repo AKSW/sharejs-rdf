@@ -172,13 +172,13 @@ class RdfJsonTurtleSync
     hybridOT.registeredDocsEmit.apply hybridOT, args
 
   _appendToTextDoc: (text) ->
-    #return @textDoc if !text
+    return @textDoc if !text
 
     @_emit 'sync-text-insert', { p: @textDoc.length, i:text }
     @textDoc += text
 
   _replaceInTextDoc: (pos, oldContent, newContent) ->
-    #return @textDoc if newContent == oldContent
+    return @textDoc if newContent == oldContent
 
     textAtPos = @textDoc.substr(pos, oldContent.length)
     if textAtPos != oldContent
@@ -188,7 +188,7 @@ class RdfJsonTurtleSync
     @textDoc = @textDoc.substr(0, pos) + newContent + @textDoc.substr(pos + oldContent.length)
 
   _changeRdfDoc: (triplesToInsert, triplesToDelete) ->
-    #return @rdfDoc if util.isTriplesEmpty(triplesToInsert) && util.isTriplesEmpty(triplesToDelete)
+    return @rdfDoc if util.isTriplesEmpty(triplesToInsert) && util.isTriplesEmpty(triplesToDelete)
 
     @_emit 'sync-rdf', { i:triplesToInsert, d:triplesToDelete }
     rdfOp = new rdfJsonOT.op triplesToInsert, triplesToDelete

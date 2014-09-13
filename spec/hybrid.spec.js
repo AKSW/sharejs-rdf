@@ -66,7 +66,7 @@
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         triple = _ref[_i];
         if (!triple.subject.nominalValue || !triple.predicate.nominalValue) {
-          return [null, parser];
+          return null;
         }
       }
     } catch (_error) {}

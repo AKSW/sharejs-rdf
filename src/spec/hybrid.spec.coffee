@@ -43,7 +43,7 @@ parseTurtle = (turtle) ->
     parsedDoc = parserTriplesArrayToRdfJson parser.graph.toArray()
 
     for triple in parser.graph.toArray()
-      return [null, parser] if !triple.subject.nominalValue || !triple.predicate.nominalValue
+      return null if !triple.subject.nominalValue || !triple.predicate.nominalValue
 
   parsedDoc
 
