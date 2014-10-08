@@ -45,5 +45,6 @@ done
 
 init-dir "sharejs-rdf-ext"
 init-dir "server"
+init-dir "angular-directives"
 init-dir "sample-app"
 
