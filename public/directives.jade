@@ -15,7 +15,7 @@ block content
 
     .row(ng-share-connect="'http://' + document.location.hostname + ':4000/channel#test'")
       .col-lg-12
-        .row(ng-share-resource='http://example.org/persons/john')
+        .row.resource-data(ng-share-resource='http://example.org/persons/john')
           .col-lg-12
             span.label Name
             span.value(ng-share-single-value='rdfs:label')

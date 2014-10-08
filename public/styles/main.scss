@@ -130,8 +130,14 @@ body {
 /* Angular Demo Directives */
 
 .share-resource {
-  padding: 0.5em 0.5em;
+  padding: 0 0.5em 0.5em;
   background: #777;
+
+  .resource-data {
+    > .col-lg-6, > .col-lg-12 {
+      margin-top: 0.5em;
+    }
+  }
 
   .label {
     display: inline-block;
