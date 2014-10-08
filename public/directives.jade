@@ -1,0 +1,27 @@
+extends __layout
+
+block header
+  +nav_links
+
+block content
+  .page-header
+    h1 Angular Directives
+
+  div.share-resource(ng-controller='DirectivesController')
+    //
+      .row.connect
+        .col-lg-12
+          include _jade-blocks/sharejs-config
+
+    .row(ng-share-connect="'http://' + document.location.hostname + ':4000/channel#test'")
+      .col-lg-12
+        .row(ng-share-resource='http://example.org/persons/john')
+          .col-lg-12
+            span.label Name
+            span.value(ng-share-single-value='rdfs:label')
+          .col-lg-6
+            span.label First Name
+            input(ng-share-model='ex:firstName')
+          .col-lg-6
+            span.label Last Name
+            input(ng-share-model='ex:lastName')

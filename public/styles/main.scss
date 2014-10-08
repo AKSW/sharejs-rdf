@@ -125,3 +125,17 @@ body {
 #sharejs-config {
   margin-bottom: 20px;
 }
+
+
+/* Angular Demo Directives */
+
+.share-resource {
+  padding: 0.5em 0.5em;
+  background: #777;
+
+  .label {
+    display: inline-block;
+    width: 9em;
+    text-align: left;
+  }
+}
