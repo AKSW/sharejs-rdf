@@ -13,7 +13,7 @@ block content
         .col-lg-12
           include _jade-blocks/sharejs-config
 
-    .row(rdfshare-connect="'http://' + document.location.hostname + ':4000/channel#test'")
+    .row(rdfshare-connect='{{ serverUrl }}')
       .col-lg-12
         .row.resource-data(rdfshare-resource='http://example.org/persons/john')
           .col-lg-12

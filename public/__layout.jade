@@ -11,7 +11,7 @@ head
     //
        Place favicon.ico and apple-touch-icon.png in the root directory
     //
-       build:css(app) styles/vendor.css
+       build:css styles/vendor.css
     //
        bower:css
     //
@@ -19,9 +19,9 @@ head
     //
        endbuild
     //
-       build:css(.tmp) styles/main.css
+       build:css styles/main.css
     link(rel='stylesheet', type='text/css', href='bower_components/codemirror/lib/codemirror.css')
-    link(rel='stylesheet', href='styles/main.css')
+    link(rel='stylesheet', href='styles/style.css')
     link(rel='stylesheet', href='styles/directives/rdf-json-editor.css')
     //
        endbuild
@@ -53,7 +53,7 @@ head
           | &nbsp;
           a(href="https://github.com/AKSW/sharejs-rdf") sharejs-rdf sample app
     //
-       build:js(app) scripts/vendor.js
+       build:js scripts/vendor.js
     //
        bower:js
     script(src='bower_components/codemirror/lib/codemirror.js')
@@ -78,8 +78,14 @@ head
       r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));
       ga('create','UA-XXXXX-X');ga('send','pageview');
     //
-       build:js({app,.tmp}) scripts/main.js
-    script(src='scripts/main.js')
+       build:js scripts/rdfshare.js
+    script(src='scripts/directives/rdfshare/index.js')
+    script(src='scripts/directives/rdfshare/connect.js')
+    //
+       endbuild
+    //
+       build:js scripts/main.js
+    script(src='scripts/app.js')
     script(src='scripts/controllers/AppController.js')
     script(src='scripts/controllers/DirectivesController.js')
     script(src='scripts/controllers/HybridEditorController.js')
