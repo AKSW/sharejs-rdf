@@ -2,7 +2,7 @@
  * Service that manages opening share.js documents, so no document is opened,
  * but the existing instance is shared instead.
  */
-angular.module('rdfshare').factory('RdfShareService', [function() {
+angular.module('rdfshare').factory('RdfShareService', ['Namespaces', function(Namespaces) {
   'use strict';
 
   /** {<document key>: <document>, ...} */
@@ -51,7 +51,7 @@ angular.module('rdfshare').factory('RdfShareService', [function() {
       throw new Error('Unable to get rdfshare-resource for ' + element);
     }
 
-    return resourceUri;
+    return resolveNamespacePrefix(resourceUri);
   };
 
 
@@ -127,13 +127,32 @@ angular.module('rdfshare').factory('RdfShareService', [function() {
   };
 
 
+  var resolveNamespacePrefix = function(uri) {
+    var match = uri.match(/^(\w+):(?!\/\/)/);
+
+    if (!match) {
+      return uri;
+    }
+
+    var nsPrefix = match[1].toLowerCase();
+    var nsUri = Namespaces.getNamespaceUri(nsPrefix);
+
+    if (!nsUri) {
+      throw new Error('Unknown namespace prefix: ' + nsPrefix);
+    }
+
+    return uri.replace(match[0], nsUri);
+  };
+
+
   // Exports:
 
   return {
     broadcastDataUpdate : broadcastDataUpdate,
     getDocument: getDocument,
     getRdfShareResource: getRdfShareResource,
-    onDataUpdate: onDataUpdate
+    onDataUpdate: onDataUpdate,
+    resolveNamespacePrefix: resolveNamespacePrefix
   };
 
 }]);

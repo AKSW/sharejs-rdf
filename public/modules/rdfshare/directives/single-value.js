@@ -6,6 +6,8 @@ angular.module('rdfshare')
       var resourceUri = RdfShareService.getRdfShareResource(element);
       var predicateUri = attrs.rdfshareSingleValue;
 
+      predicateUri = RdfShareService.resolveNamespacePrefix(predicateUri);
+
       RdfShareService.onDataUpdate(scope, function(rdfJsonInserted, rdfJsonDeleted) {
         var objects = RdfJsonUtil.objectsForSP(rdfJsonInserted, resourceUri, predicateUri);
 
