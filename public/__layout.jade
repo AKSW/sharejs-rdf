@@ -22,7 +22,7 @@ head
        build:css styles/main.css
     link(rel='stylesheet', type='text/css', href='bower_components/codemirror/lib/codemirror.css')
     link(rel='stylesheet', href='styles/style.css')
-    link(rel='stylesheet', href='styles/directives/rdf-json-editor.css')
+    link(rel='stylesheet', href='modules/app/styles/rdf-json-editor.css')
     //
        endbuild
     block head
@@ -62,10 +62,10 @@ head
     script(src='bower_components/angular-ui-codemirror/ui-codemirror.js')
     //
        endbower
-    script(src='scripts/vendor/browserchannel/bcsocket.js')
-    script(src='scripts/vendor/share/share.js')
-    script(src='scripts/vendor/share/cm.js')
-    script(src='scripts/vendor/sharejs-rdf-ext/web.js')
+    script(src='vendor/browserchannel/bcsocket.js')
+    script(src='vendor/share/share.js')
+    script(src='vendor/share/cm.js')
+    script(src='vendor/sharejs-rdf-ext/web.js')
     //
        endbuild
     //
@@ -78,25 +78,25 @@ head
       r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));
       ga('create','UA-XXXXX-X');ga('send','pageview');
     //
-       build:js scripts/rdfshare.js
-    script(src='scripts/services/rdfshare/index.js')
-    script(src='scripts/utility/TripleSet.js')
-    script(src='scripts/services/rdfshare/RdfShareService.js')
-    script(src='scripts/directives/rdfshare/connect.js')
+       build:js modules/rdfshare.js
+    script(src='modules/rdfshare/index.js')
+    script(src='modules/rdfshare/TripleSet.js')
+    script(src='modules/rdfshare/RdfShareService.js')
+    script(src='modules/rdfshare/directives/connect.js')
     //
        endbuild
     //
-       build:js scripts/main.js
-    script(src='scripts/app.js')
-    script(src='scripts/controllers/AppController.js')
-    script(src='scripts/controllers/DirectivesController.js')
-    script(src='scripts/controllers/HybridEditorController.js')
-    script(src='scripts/controllers/JsonEditorController.js')
-    script(src='scripts/controllers/TurtleEditorController.js')
-    script(src='scripts/directives/HybridEditorDirective.js')
-    script(src='scripts/directives/RdfJsonEditorDirective.js')
-    script(src='scripts/directives/SetFocusOnEventDirective.js')
-    script(src='scripts/services/AlertService.js')
-    script(src='scripts/services/RdfJsonAttachmentService.js')
+       build:js modules/app.js
+    script(src='modules/app/index.js')
+    script(src='modules/app/controllers/AppController.js')
+    script(src='modules/app/controllers/DirectivesController.js')
+    script(src='modules/app/controllers/HybridEditorController.js')
+    script(src='modules/app/controllers/JsonEditorController.js')
+    script(src='modules/app/controllers/TurtleEditorController.js')
+    script(src='modules/app/directives/HybridEditorDirective.js')
+    script(src='modules/app/directives/RdfJsonEditorDirective.js')
+    script(src='modules/app/directives/SetFocusOnEventDirective.js')
+    script(src='modules/app/services/AlertService.js')
+    script(src='modules/app/services/RdfJsonAttachmentService.js')
     //
        endbuild
