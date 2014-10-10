@@ -79,7 +79,9 @@ head
       ga('create','UA-XXXXX-X');ga('send','pageview');
     //
        build:js scripts/rdfshare.js
-    script(src='scripts/directives/rdfshare/index.js')
+    script(src='scripts/services/rdfshare/index.js')
+    script(src='scripts/utility/TripleSet.js')
+    script(src='scripts/services/rdfshare/RdfShareService.js')
     script(src='scripts/directives/rdfshare/connect.js')
     //
        endbuild
@@ -96,6 +98,5 @@ head
     script(src='scripts/directives/SetFocusOnEventDirective.js')
     script(src='scripts/services/AlertService.js')
     script(src='scripts/services/RdfJsonAttachmentService.js')
-    script(src='scripts/utility/TripleSet.js')
     //
        endbuild

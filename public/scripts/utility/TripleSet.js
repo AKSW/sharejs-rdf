@@ -8,7 +8,7 @@
  *  https://dvcs.w3.org/hg/rdf/raw-file/default/rdf-json/index.html#overview-of-rdf-json
  */
 
-angular.module('app').factory('TripleSet', function() {
+angular.module('rdfshare').factory('TripleSet', function() {
   'use strict';
 
   var TripleSet = function () {
