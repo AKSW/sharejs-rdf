@@ -23,13 +23,15 @@ angular.module('rdfshare')
     };
 
 
-    var initialDataUpdate = function() {
-      // TODO
+    var initialDataUpdate = function(scope, rdfJson) {
+      RdfShareService.broadcastDataUpdate(scope, rdfJson, {});
     };
 
 
-    var link = function(scope) {
-      connectTo(scope.url, function(error,doc) {
+    var link = function(scope, element, attrs) {
+      var url = attrs.rdfshareConnect;
+
+      connectTo(url, function(error, doc) {
         if (error) {
           return AlertService.danger(error);
         }
@@ -39,15 +41,11 @@ angular.module('rdfshare')
         shareDoc = doc;
         tripleSet = TripleSet.createByRdfJson(rdfJson);
 
-        initialDataUpdate();
+        initialDataUpdate(scope, rdfJson);
       });
     };
 
-
     return {
-      scope: {
-        url: '@rdfshareConnect'
-      },
       link: link
     };
 

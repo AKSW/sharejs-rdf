@@ -12,6 +12,21 @@ angular.module('rdfshare').factory('RdfShareService', [function() {
   var documentsBeingOpened = {};
 
 
+  var broadcastDataUpdate = function(scope, rdfJsonInserted, rdfJsonDeleted) {
+    scope.$broadcast('rdfshare-update', {
+      inserted: rdfJsonInserted,
+      deleted:  rdfJsonDeleted
+    });
+  };
+
+
+  var onDataUpdate = function(scope, handler) {
+    scope.$on('rdfshare-update', function(event, data) {
+      handler(data.inserted, data.deleted);
+    });
+  };
+
+
   var cloneObject = function(object) {
     var clone = {};
 
@@ -25,6 +40,37 @@ angular.module('rdfshare').factory('RdfShareService', [function() {
 
   var createDocumentKey = function(serverUrl, documentName) {
     return serverUrl + '#' + documentName;
+  };
+
+
+  var getRdfShareResource = function(element) {
+    var resourceUri = getRdfShareResourceOrNull(element);
+
+    if (!resourceUri) {
+      console.error('Unable to get rdfshare-resource for ', element);
+      throw new Error('Unable to get rdfshare-resource for ' + element);
+    }
+
+    return resourceUri;
+  };
+
+
+  var getRdfShareResourceOrNull = function(element) {
+    element = angular.element(element);
+
+    var data = element.attr('data-rdfshare-resource') || element.attr('rdfshare-resource');
+
+    if (data) {
+      return data;
+    }
+
+    var parent = element.parent();
+
+    if (parent.length == 0 || parent[0] == document.body) {
+      return null;
+    }
+
+    return getRdfShareResourceOrNull(parent);
   };
 
 
@@ -84,7 +130,10 @@ angular.module('rdfshare').factory('RdfShareService', [function() {
   // Exports:
 
   return {
-    getDocument: getDocument
+    broadcastDataUpdate : broadcastDataUpdate,
+    getDocument: getDocument,
+    getRdfShareResource: getRdfShareResource,
+    onDataUpdate: onDataUpdate
   };
 
 }]);
