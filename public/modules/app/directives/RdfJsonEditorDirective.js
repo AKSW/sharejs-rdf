@@ -16,7 +16,7 @@ angular.module('app').directive('rdfJsonEditor', function () {
   return {
     replace: true,
     restrict: 'E',
-    templateUrl: 'templates/rdf-json-editor.html',
+    templateUrl: 'modules/app/templates/rdf-json-editor.html',
 
     controller: ['$scope', 'TripleSet', function ($scope, TripleSet) {
 

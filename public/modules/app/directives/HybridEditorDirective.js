@@ -4,7 +4,7 @@ angular.module('app').directive('hybridEditor', function () {
   return {
     replace: true,
     restrict: 'E',
-    templateUrl: 'templates/hybrid-editor.html',
+    templateUrl: 'modules/app/templates/hybrid-editor.html',
 
     controller: ['$scope', 'AlertService', 'RdfJsonAttachmentService',
                 function ($scope, AlertService, RdfJsonAttachmentService) {
