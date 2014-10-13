@@ -19,7 +19,7 @@ angular.module('rdfshare')
 
 
     var setNamespace = function(prefix, uri) {
-      namespace[prefix] = uri;
+      namespaces[prefix] = uri;
     };
 
 
