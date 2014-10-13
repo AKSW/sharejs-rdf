@@ -8,12 +8,18 @@ angular.module('rdfshare')
 
       predicateUri = RdfShareService.resolveNamespacePrefix(predicateUri);
 
+      onInsertion(scope, resourceUri, predicateUri, function(objects) {
+        var object = objects[0];
+        angular.element(element).text(object.value);
+      });
+    };
+
+    var onInsertion = function(scope, resourceUri, predicateUri, callback) {
       RdfShareService.onDataUpdate(scope, function(rdfJsonInserted, rdfJsonDeleted) {
         var objects = RdfJsonUtil.objectsForSP(rdfJsonInserted, resourceUri, predicateUri);
 
         if (objects.length > 0) {
-          var object = objects[0];
-          angular.element(element).text(object.value);
+          callback(objects);
         }
       });
     };
