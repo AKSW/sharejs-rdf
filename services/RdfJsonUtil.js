@@ -10,8 +10,20 @@ angular.module('rdfshare')
       return rdfJson[subjectUri][predicateUri];
     };
 
+
+    var tripleToRdfJson = function(subjectUri, predicateUri, object) {
+      var rdfJson = {};
+
+      rdfJson[subjectUri] = {};
+      rdfJson[subjectUri][predicateUri] = [object];
+
+      return rdfJson;
+    };
+
+
     return {
-      objectsForSP: objectsForSP
+      objectsForSP: objectsForSP,
+      tripleToRdfJson: tripleToRdfJson
     };
 
   }]
