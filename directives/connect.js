@@ -1,10 +1,6 @@
 angular.module('rdfshare')
-  .directive('rdfshareConnect', ['AlertService', 'RdfShareService', 'TripleSet', function(AlertService, RdfShareService, TripleSet) {
+  .directive('rdfshareConnect', ['AlertService', 'RdfShareService', function(AlertService, RdfShareService) {
     'use strict';
-
-    var shareDoc;
-
-    var tripleSet = new TripleSet();
 
 
     var connectTo = function(url, callback) {
@@ -32,9 +28,6 @@ angular.module('rdfshare')
         }
 
         var rdfJson = doc.getRdfJsonData();
-
-        shareDoc = doc;
-        tripleSet = TripleSet.createByRdfJson(rdfJson);
 
         initialDataUpdate(rdfJson);
       });
