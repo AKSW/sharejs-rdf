@@ -2,7 +2,7 @@
  * Service that manages opening share.js documents, so no document is opened,
  * but the existing instance is shared instead.
  */
-angular.module('rdfshare').factory('RdfShareService', ['Namespaces', function(Namespaces) {
+angular.module('rdfshare').factory('RdfShareService', ['$rootScope', 'Namespaces', function($rootScope, Namespaces) {
   'use strict';
 
   /** {<document key>: <document>, ...} */
@@ -12,8 +12,8 @@ angular.module('rdfshare').factory('RdfShareService', ['Namespaces', function(Na
   var documentsBeingOpened = {};
 
 
-  var broadcastDataUpdate = function(scope, rdfJsonInserted, rdfJsonDeleted) {
-    scope.$broadcast('rdfshare-update', {
+  var broadcastDataUpdate = function(rdfJsonInserted, rdfJsonDeleted) {
+    $rootScope.$broadcast('rdfshare:update', {
       inserted: rdfJsonInserted,
       deleted:  rdfJsonDeleted
     });
@@ -21,7 +21,7 @@ angular.module('rdfshare').factory('RdfShareService', ['Namespaces', function(Na
 
 
   var onDataUpdate = function(scope, handler) {
-    scope.$on('rdfshare-update', function(event, data) {
+    scope.$on('rdfshare:update', function(event, data) {
       handler(data.inserted, data.deleted);
     });
   };
@@ -44,7 +44,7 @@ angular.module('rdfshare').factory('RdfShareService', ['Namespaces', function(Na
 
 
   var getRdfShareResource = function(element) {
-    var resourceUri = getRdfShareResourceOrNull(element);
+    var resourceUri = getParentElementAttrValue(element, 'rdfshare-resource');
 
     if (!resourceUri) {
       console.error('Unable to get rdfshare-resource for ', element);
@@ -55,10 +55,10 @@ angular.module('rdfshare').factory('RdfShareService', ['Namespaces', function(Na
   };
 
 
-  var getRdfShareResourceOrNull = function(element) {
+  var getParentElementAttrValue = function(element, attributeName) {
     element = angular.element(element);
 
-    var data = element.attr('data-rdfshare-resource') || element.attr('rdfshare-resource');
+    var data = element.attr('data-' + attributeName) || element.attr(attributeName);
 
     if (data) {
       return data;
@@ -70,18 +70,22 @@ angular.module('rdfshare').factory('RdfShareService', ['Namespaces', function(Na
       return null;
     }
 
-    return getRdfShareResourceOrNull(parent);
+    return getParentElementAttrValue(parent, attributeName);
   };
 
 
   /**
    * @method RdfShareService.getDocument
-   * @param {string} serverUrl    Url to the share server instance.
-   * @param {string} documentName
+   * @param {string} connectUrl   Url to the share server instance: http://host:port/path#documentName
    * @param {object} shareOptions Additional options passed to sharejs.open(), authentication data for instance
    * @param {function} callback   callback(error, document)
    */
-  var getDocument = function(serverUrl, documentName, shareOptions, callback) {
+  var getDocument = function(connectUrl, shareOptions, callback) {
+    var parsed = parseServerUrl(connectUrl);
+
+    var serverUrl = parsed[0];
+    var documentName = parsed[1];
+
     var docKey = createDocumentKey(serverUrl, documentName);
 
     // has the document already been opened?
@@ -127,6 +131,18 @@ angular.module('rdfshare').factory('RdfShareService', ['Namespaces', function(Na
   };
 
 
+  var parseServerUrl = function(url) {
+    var serverUrl = url.split('#')[0];
+    var docName = url.split('#')[1];
+
+    if (!docName) {
+      throw new Error('No document name given. Append to server URL as "#<doc name>".');
+    }
+
+    return [serverUrl, docName];
+  };
+
+
   var resolveNamespacePrefix = function(uri) {
     var match = uri.match(/^(\w+):(?!\/\/)/);
 
@@ -145,6 +161,13 @@ angular.module('rdfshare').factory('RdfShareService', ['Namespaces', function(Na
   };
 
 
+  var updateRdf = function(rdfshareDoc, rdfJsonInsertion, rdfJsonDeletion) {
+    rdfshareDoc.updateRdfJson(rdfJsonInsertion, rdfJsonDeletion);
+
+    broadcastDataUpdate(rdfJsonInsertion, rdfJsonDeletion);
+  };
+
+
   // Exports:
 
   return {
@@ -152,7 +175,8 @@ angular.module('rdfshare').factory('RdfShareService', ['Namespaces', function(Na
     getDocument: getDocument,
     getRdfShareResource: getRdfShareResource,
     onDataUpdate: onDataUpdate,
-    resolveNamespacePrefix: resolveNamespacePrefix
+    resolveNamespacePrefix: resolveNamespacePrefix,
+    updateRdf: updateRdf
   };
 
 }]);

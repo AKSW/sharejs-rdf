@@ -14,6 +14,7 @@ angular.module('rdfshare')
       });
     };
 
+
     var onInsertion = function(scope, resourceUri, predicateUri, callback) {
       RdfShareService.onDataUpdate(scope, function(rdfJsonInserted, rdfJsonDeleted) {
         var objects = RdfJsonUtil.objectsForSP(rdfJsonInserted, resourceUri, predicateUri);
@@ -23,6 +24,7 @@ angular.module('rdfshare')
         }
       });
     };
+    
 
     return {
       link: link

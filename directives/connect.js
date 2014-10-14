@@ -8,28 +8,23 @@ angular.module('rdfshare')
 
 
     var connectTo = function(url, callback) {
-      var serverUrl = url.split('#')[0];
-      var docName = url.split('#')[1];
-
-      if (!docName) {
-        return AlertService.danger('No document name given. Append to server URL as "#<doc name>".');
-      }
-
       var options = {
         // authentication: '1234567'
       };
 
-      RdfShareService.getDocument(serverUrl, docName, options, callback);
+      RdfShareService.getDocument(url, options, callback);
     };
 
 
-    var initialDataUpdate = function(scope, rdfJson) {
-      RdfShareService.broadcastDataUpdate(scope, rdfJson, {});
+    var initialDataUpdate = function(rdfJson) {
+      RdfShareService.broadcastDataUpdate(rdfJson, {});
     };
 
 
     var link = function(scope, element, attrs) {
       var url = attrs.rdfshareConnect;
+
+      scope.$emit('rdfshare:connect-url', url);
 
       connectTo(url, function(error, doc) {
         if (error) {
@@ -41,9 +36,10 @@ angular.module('rdfshare')
         shareDoc = doc;
         tripleSet = TripleSet.createByRdfJson(rdfJson);
 
-        initialDataUpdate(scope, rdfJson);
+        initialDataUpdate(rdfJson);
       });
     };
+
 
     return {
       link: link
