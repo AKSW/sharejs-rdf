@@ -2,7 +2,7 @@
  * Service that manages opening share.js documents, so no document is opened,
  * but the existing instance is shared instead.
  */
-angular.module('rdfshare').factory('RdfShareService', ['$rootScope', 'Namespaces', function($rootScope, Namespaces) {
+angular.module('rdfshare').factory('RdfShareService', ['$log', '$rootScope', 'Namespaces', function($log, $rootScope, Namespaces) {
   'use strict';
 
   /** {<document key>: <document>, ...} */
@@ -47,7 +47,7 @@ angular.module('rdfshare').factory('RdfShareService', ['$rootScope', 'Namespaces
     var resourceUri = getParentElementAttrValue(element, 'rdfshare-resource');
 
     if (!resourceUri) {
-      console.error('Unable to get rdfshare-resource for ', element);
+      $log.error('Unable to get rdfshare-resource for ', element);
       throw new Error('Unable to get rdfshare-resource for ' + element);
     }
 
@@ -124,7 +124,7 @@ angular.module('rdfshare').factory('RdfShareService', ['$rootScope', 'Namespaces
         try {
           callback(error, doc);
         } catch (errorThrown) {
-          console.error(errorThrown.stack);
+          $log.error(errorThrown.stack);
         }
       }
     });
@@ -161,7 +161,24 @@ angular.module('rdfshare').factory('RdfShareService', ['$rootScope', 'Namespaces
   };
 
 
+  var setUpDocumentListeners = function(shareDoc) {
+    var rdfJson = shareDoc.getRdfJsonData();
+
+    // initial data broadcast
+    $log.log('Document opened: ', rdfJson);
+    broadcastDataUpdate(rdfJson, {});
+
+    shareDoc.on('rdf-update', function (rdfJsonIns, rdfJsonDel) {
+      $log.log('Downstream data change. Insertion: ', rdfJsonIns, ' Deletion: ', rdfJsonDel);
+
+      broadcastDataUpdate(rdfJsonIns, rdfJsonDel);
+    });
+  };
+
+
   var updateRdf = function(rdfshareDoc, rdfJsonInsertion, rdfJsonDeletion) {
+    $log.log('Upstream data change. Insertion: ', rdfJsonInsertion, 'Deletion: ', rdfJsonDeletion);
+
     rdfshareDoc.updateRdfJson(rdfJsonInsertion, rdfJsonDeletion);
 
     broadcastDataUpdate(rdfJsonInsertion, rdfJsonDeletion);
@@ -171,11 +188,11 @@ angular.module('rdfshare').factory('RdfShareService', ['$rootScope', 'Namespaces
   // Exports:
 
   return {
-    broadcastDataUpdate : broadcastDataUpdate,
     getDocument: getDocument,
     getRdfShareResource: getRdfShareResource,
     onDataUpdate: onDataUpdate,
     resolveNamespacePrefix: resolveNamespacePrefix,
+    setUpDocumentListeners: setUpDocumentListeners,
     updateRdf: updateRdf
   };
 

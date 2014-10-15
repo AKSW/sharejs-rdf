@@ -12,11 +12,6 @@ angular.module('rdfshare')
     };
 
 
-    var initialDataUpdate = function(rdfJson) {
-      RdfShareService.broadcastDataUpdate(rdfJson, {});
-    };
-
-
     var link = function(scope, element, attrs) {
       var url = attrs.rdfshareConnect;
 
@@ -27,17 +22,7 @@ angular.module('rdfshare')
           return AlertService.danger(error);
         }
 
-        var rdfJson = doc.getRdfJsonData();
-
-        initialDataUpdate(rdfJson);
-        setUpDocListeners(doc);
-      });
-    };
-
-
-    var setUpDocListeners = function(doc) {
-      doc.on('rdf-update', function (rdfJsonIns, rdfJsonDel) {
-        RdfShareService.broadcastDataUpdate(rdfJsonIns, rdfJsonDel);
+        RdfShareService.setUpDocumentListeners(doc);
       });
     };
 
