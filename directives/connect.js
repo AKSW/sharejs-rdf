@@ -30,6 +30,14 @@ angular.module('rdfshare')
         var rdfJson = doc.getRdfJsonData();
 
         initialDataUpdate(rdfJson);
+        setUpDocListeners(doc);
+      });
+    };
+
+
+    var setUpDocListeners = function(doc) {
+      doc.on('rdf-update', function (rdfJsonIns, rdfJsonDel) {
+        RdfShareService.broadcastDataUpdate(rdfJsonIns, rdfJsonDel);
       });
     };
 
