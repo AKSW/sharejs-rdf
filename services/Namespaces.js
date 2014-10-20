@@ -18,6 +18,15 @@ angular.module('rdfshare')
     };
 
 
+    var register = function(namespaces) {
+      for (var prefix in namespaces) {
+        var uri = namespaces[prefix];
+        
+        setNamespace(prefix, uri);
+      }
+    };
+
+
     var setNamespace = function(prefix, uri) {
       namespaces[prefix] = uri;
     };
@@ -25,7 +34,7 @@ angular.module('rdfshare')
 
     return {
       getNamespaceUri: getNamespaceUri,
-      setNamespace: setNamespace
+      register: register
     };
 
   }]
