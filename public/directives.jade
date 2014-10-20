@@ -1,5 +1,10 @@
 extends __layout
 
+block head
+  meta(name='rdfshare-namespaces', value='')
+  script(type='x-rdfshare/namespaces')
+      "ex": "http://example.com/ontology/"
+
 block header
   +nav_links
 
