@@ -18,12 +18,45 @@ angular.module('rdfshare')
     };
 
 
+    var normalizeString = function(string) {
+      string = string.trim();
+
+      if (string.charAt(0) == '"' && string.charAt(string.length-1) == '"') {
+        string = string.substr(1, string.length-2);
+      }
+
+      return string;
+    };
+
+
     var register = function(namespaces) {
       for (var prefix in namespaces) {
         var uri = namespaces[prefix];
-        
+
         setNamespace(prefix, uri);
       }
+    };
+
+
+    var registerByText = function(textContent) {
+      var namespaces = {};
+      var lines = textContent.split("\n");
+
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        var separatorIndex = line.indexOf(':');
+
+        if (separatorIndex > -1) {
+          var prefix = normalizeString( line.substr(0, separatorIndex) );
+          var uri = normalizeString( line.substr(separatorIndex+1) );
+
+          namespaces[prefix] = uri;
+        }
+      }
+
+      register(namespaces);
+
+      return namespaces;
     };
 
 
@@ -34,7 +67,8 @@ angular.module('rdfshare')
 
     return {
       getNamespaceUri: getNamespaceUri,
-      register: register
+      register: register,
+      registerByText: registerByText
     };
 
   }]
